@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Services and fees</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="citizen" data-page="services">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:24px">
+  <div class="stack" style="gap:8px">
+    <h1 data-i18n="fees.title"></h1>
+    <div class="notice n-ok" data-i18n="fees.note"></div>
+  </div>
+  <div class="split">
+    <section class="main card stack">
+      <div class="scroll-x"><table id="fees"></table></div>
+      <p class="small muted" style="margin:0" id="feeNote"></p>
+    </section>
+    <aside class="side stack">
+      <div class="card stack"><h3 id="offTitle"></h3><p class="small" style="margin:0" id="offText"></p><a class="btn sm ghost" href="assistant.html?q=office hours" id="offBtn"></a></div>
+      <div class="card stack"><h3 id="guideTitle"></h3><div class="stack" id="guides"></div></div>
+    </aside>
+  </div>
+
+  <section id="business" class="card stack">
+    <h2 id="bTitle"></h2>
+    <p class="muted" style="margin:0" id="bIntro"></p>
+    <div class="grid g3">
+      <label class="f"><span id="q1l"></span><select id="q1"></select></label>
+      <label class="f"><span id="q2l"></span><select id="q2"></select></label>
+      <label class="f"><span id="q3l"></span><select id="q3"></select></label>
+    </div>
+    <div id="bOut"></div>
+  </section>
+</main>
+<script>
+(function(){
+  const A = App;
+  function render(){
+    const fr = A.state.lang === 'fr';
+    document.getElementById('fees').innerHTML = '<thead><tr><th>' + (fr?'Service':'Service') + '</th><th>' + (fr?'Tarif officiel':'Official fee') + '</th><th></th></tr></thead><tbody>' +
+      A.FEES.map(f => '<tr><td>' + A.esc(fr?f.fr:f.en) + '</td><td><strong>' + A.fmt(f.amount) + '</strong> <span class="muted small">' + f.unit + '</span></td><td><a class="small" href="assistant.html?q=' + encodeURIComponent(f.en) + '">' + (fr?'Comment faire':'How to') + '</a></td></tr>').join('') + '</tbody>';
+    document.getElementById('feeNote').textContent = fr ? 'Valeurs de démonstration, à remplacer par les tarifs confirmés par la commune.' : 'Demo values, to be replaced by the fees confirmed by the council.';
+    document.getElementById('offTitle').textContent = fr ? 'Service d’état civil' : 'Civil status office';
+    document.getElementById('offText').textContent = fr ? 'Lundi–vendredi, 7h30–15h30 (démo). Réservez un créneau pour éviter la file.' : 'Monday–Friday, 7:30am–3:30pm (demo). Book a time slot in the app to avoid queuing.';
+    document.getElementById('offBtn').textContent = fr ? 'Demander à l’assistant' : 'Ask the assistant';
+    document.getElementById('guideTitle').textContent = fr ? 'Guides audio et vidéo' : 'Short audio and video guides';
+    document.getElementById('guides').innerHTML = [['Why register your baby early','Pidgin · 1:40'],['Late registration explained','English · 2:10'],['Obtenir une copie d’acte','Français · 1:55'],['Rider jacket: official price','Pidgin · 0:50']].map(g => '<button class="row" style="border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer" onclick="App.toast(\'Playing guide (demo)\')"><span class="badge b-info">▶</span><span class="stack" style="gap:0"><strong class="small">' + g[0] + '</strong><span class="small muted">' + g[1] + '</span></span></button>').join('');
+    document.getElementById('bTitle').textContent = fr ? 'Créer ou déclarer une petite activité' : 'Starting or running a small business';
+    document.getElementById('bIntro').textContent = fr ? 'Répondez à trois questions pour connaître votre catégorie selon la loi de finances 2025/2026 (règles de démo).' : 'Answer three questions to see which category of the 2025/2026 finance law applies to you (demo rules, to be confirmed by the council).';
+    const opts = (id, label, o) => { document.getElementById(id + 'l').textContent = label; const s = document.getElementById(id), cur = s.value; s.innerHTML = o.map((x,i) => '<option value="' + i + '">' + x + '</option>').join(''); if (cur) s.value = cur; };
+    opts('q1', fr?'Type d’activité':'Type of activity', fr?['Moto-taxi','Petit commerce / boutique','Stand au marché','Restauration de rue','Autre service']:['Moto-taxi','Small shop','Market stall','Street food','Other service']);
+    opts('q2', fr?'Chiffre d’affaires annuel estimé':'Estimated yearly turnover', fr?['Moins de 2 millions FCFA','2 à 10 millions FCFA','Plus de 10 millions FCFA']:['Under 2 million FCFA','2–10 million FCFA','Over 10 million FCFA']);
+    opts('q3', fr?'Déjà enregistré à la commune ?':'Already registered with the council?', fr?['Non','Oui']:['No','Yes']);
+    calc();
+  }
+  function calc(){
+    const fr = A.state.lang === 'fr', a = +document.getElementById('q1').value, t = +document.getElementById('q2').value, reg = +document.getElementById('q3').value;
+    let html;
+    if (t === 2) html = '<div class="notice n-info">' + (fr?'Au-delà de 10 millions FCFA, votre dossier relève de l’administration fiscale nationale. La commune vous orientera.':'Above 10 million FCFA, your taxes are handled by the national tax authority, not the council. We’ll point you to the right office.') + '</div>';
+    else {
+      const items = [];
+      if (!reg) items.push([fr?'S’enregistrer à la commune':'Register with the council', a === 0 ? 5000 : 3000]);
+      if (a === 0) items.push([fr?'Chasuble moto-taxi':'Rider jacket', 6500]);
+      if (a === 2) items.push([fr?'Droit de place (mois)':'Market stall fee (per month)', 2500]);
+      items.push([fr?'Impôt petits opérateurs (trimestre), cat. ':'Small-operator tax (per quarter), category ' + (t === 0 ? 'A' : 'B'), t === 0 ? 15000 : 37500]);
+      html = '<div class="card flat stack" style="background:var(--tint)"><strong>' + (fr?'Ce que vous payez (démo)':'What you pay (demo)') + '</strong><table><tbody>' + items.map(i => '<tr><td>' + i[0] + '</td><td style="text-align:right"><strong>' + A.fmt(i[1]) + '</strong></td></tr>').join('') + '</tbody></table><div class="row">' + (a === 0 ? '<a class="btn" href="rider.html">' + (fr?'Services moto-taxi':'Rider services') + '</a>' : '<button class="btn" onclick="App.toast(\'Registration form (next phase)\')">' + (fr?'S’enregistrer':'Register now') + '</button>') + '<a class="btn ghost" href="assistant.html?q=small business tax">' + (fr?'Questions ?':'Questions?') + '</a></div></div>';
+    }
+    document.getElementById('bOut').innerHTML = html;
+  }
+  ['q1','q2','q3'].forEach(id => document.getElementById(id).addEventListener('change', calc));
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

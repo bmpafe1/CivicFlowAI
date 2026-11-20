@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Platform console · all councils</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="platform" data-page="platform">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <div class="stack" style="gap:2px"><h1 style="font-size:24px">One platform, many councils</h1><span class="small muted">Platform administrator view · anonymised figures only · demo data</span></div>
+  <div class="grid g4" id="kpis"></div>
+  <div class="notice n-info">National context (BUNEC, September 2026): 60 of 432 main civil status centres digitised (13.9%); target 2029. Where BUNEC software is installed, it stays the official register and the platform adds citizen services around it. Elsewhere the platform follows BUNEC standards and sends the monthly transmissions BUNEC tracks.</div>
+  <section class="card stack">
+    <h2>Councils on the platform</h2>
+    <div class="scroll-x"><table id="tbl"></table></div>
+  </section>
+  <div class="grid g2">
+    <section class="card stack">
+      <h2>Add a council</h2>
+      <p class="small muted" style="margin:0">A new council is set up by configuration in minutes. No new installation, no new code.</p>
+      <form id="f" class="stack">
+        <div class="grid g2">
+          <label class="f">Name (English)<input type="text" id="nen" value="Kumba II Council" required></label>
+          <label class="f">Nom (français)<input type="text" id="nfr" value="Commune de Kumba II" required></label>
+          <label class="f">Region<select id="reg"><option>South-West</option><option>North-West</option><option>Littoral</option><option>Centre</option><option>West</option><option>Far North</option></select></label>
+          <label class="f">Default language<select id="lng"><option value="en">English</option><option value="fr">Français</option></select></label>
+          <label class="f">Web address<input type="text" id="sub" value="kumba2"></label>
+          <label class="f">First administrator email<input type="text" id="adm" value="sg@kumba2.example"></label>
+          <label class="f">Civil status register<select id="reg2"><option value="platform">Platform register (BUNEC standards)</option><option value="bunec">BUNEC software installed: platform adds citizen services</option></select></label>
+        </div>
+        <fieldset style="border:0;padding:0;margin:0"><legend class="small" style="font-weight:600;margin-bottom:6px">Modules to switch on</legend>
+          <div class="row small" id="mods"></div></fieldset>
+        <button class="btn" style="align-self:flex-start">Create council</button>
+      </form>
+      <div id="out"></div>
+    </section>
+    <section class="card stack">
+      <h2>Connected services</h2>
+      <table><tbody id="conn"></tbody></table>
+      <p class="small muted" style="margin:0">Regional and national bodies see combined statistics without personal data.</p>
+    </section>
+  </div>
+  <div class="grid g2">
+    <section class="card stack"><h2>Regional view (anonymised)</h2><p class="small muted" style="margin:0">What a region, the ministry or FEICOM sees: totals only, no names.</p><table><thead><tr><th>Region</th><th>Councils</th><th>Births registered (Nov)</th><th>On time</th></tr></thead><tbody><tr><td>South-West</td><td>1 live + 2 connected</td><td>41</td><td>83%</td></tr><tr><td>Littoral</td><td>1 onboarding</td><td>8</td><td>75%</td></tr></tbody></table></section>
+    <section class="card stack"><h2>Monthly transmission to BUNEC</h2><p class="small muted" style="margin:0">The figures BUNEC's national dashboard tracks for each civil status centre, sent in the national format.</p><table><thead><tr><th>Month</th><th>Council</th><th>Births</th><th>Marriages</th><th>Deaths</th><th>Status</th></tr></thead><tbody><tr><td>October 2026</td><td>Limbe II</td><td>47</td><td>9</td><td>12</td><td><span class="badge b-ok">Sent 1 Nov · acknowledged</span></td></tr><tr><td>November 2026</td><td>Limbe II</td><td id="novB">41</td><td>6</td><td>8</td><td><span class="badge b-warn">Due 5 Dec · draft</span></td></tr><tr><td>October 2026</td><td>Douala III</td><td colspan="3" class="small muted">Not yet live on the platform</td><td><span class="badge b-grey">—</span></td></tr></tbody></table></section>
+  </div>
+  <div class="grid g2">
+    <section class="card stack"><h2>Record exchange log</h2><table><thead><tr><th>When</th><th>From</th><th>To</th><th>What</th></tr></thead><tbody><tr><td class="small">12 Nov 05:00</td><td>Limbe II</td><td>BUNEC</td><td>Daily sync, 9 records</td></tr><tr><td class="small">11 Nov 14:20</td><td>Douala III</td><td>Limbe II</td><td>Copy request XR-2026-0012</td></tr><tr><td class="small">10 Nov 09:02</td><td>Limbe II</td><td>Buea (connected)</td><td>Copy request XR-2026-0015</td></tr></tbody></table></section>
+  </div>
+</main>
+<script>
+(function(){
+  const A = App, MODS = ['Civil status','Payments','AI assistant','Health centres','Business & tax','Record exchange'];
+  document.getElementById('mods').innerHTML = MODS.map((m,i) => '<label class="row" style="gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 12px"><input type="checkbox" value="' + m + '"' + (i < 4 ? ' checked' : '') + '> ' + m + '</label>').join('');
+  function render(){
+    const C = A.state.councils, R = A.state.requests;
+    const k = [['Councils live or onboarding', C.filter(c => c.status !== 'Connected system').length],['Connected local systems', C.filter(c => c.status === 'Connected system').length],['Requests on the platform', R.length + 1386],['Records sent to BUNEC this month', 214]];
+    document.getElementById('kpis').innerHTML = k.map(x => '<div class="kpi"><div class="v">' + x[1].toLocaleString('en-US') + '</div><div class="l">' + x[0] + '</div></div>').join('');
+    document.getElementById('tbl').innerHTML = '<thead><tr><th>Council</th><th>Region</th><th>Language</th><th>Status</th><th>Civil status register</th><th>Theme</th><th>Modules</th><th>Requests</th></tr></thead><tbody>' + C.map(c => '<tr><td><strong>' + A.esc(c.name) + '</strong>' + (c.nameFr ? '<div class="small muted">' + A.esc(c.nameFr) + '</div>' : '') + '</td><td>' + c.region + '</td><td>' + (c.lang === 'fr' ? 'Français' : 'English') + '</td><td><span class="badge ' + ({ 'Pilot':'b-ok','Onboarding':'b-warn','Connected system':'b-info','New':'b-warn' }[c.status] || 'b-grey') + '">' + c.status + '</span></td><td class="small">' + ({ bunec: 'BUNEC software (official register)', local: 'Own local system', platform: 'Platform (BUNEC standards)' }[c.register || (c.status === 'Connected system' ? 'local' : 'platform')]) + '</td><td class="small">' + (t => '<span class="swatch" style="background:' + t.primary + '"></span> <span class="swatch" style="background:' + t.accent + '"></span> ' + t.name)(A.themeFor(c.id)) + '</td><td class="small">' + c.modules.join(', ') + '</td><td>' + R.filter(r => r.council === c.id).length + '</td></tr>').join('') + '</tbody>';
+    document.getElementById('conn').innerHTML = [['BUNEC national civil status system','Monthly transmission · October sent · last sync today 05:00','b-ok'],['Limbe I Council local system','Record exchange · test mode','b-warn'],['Buea Council local system','Record exchange · test mode','b-warn'],['MTN Mobile Money','Connected (sandbox)','b-ok'],['Orange Money','Connected (sandbox)','b-ok'],['SMS / USSD gateway','Connected (sandbox)','b-ok'],['National tax authority','Referral link only','b-info']].map(x => '<tr><td>' + x[0] + '</td><td><span class="badge ' + x[2] + '">' + x[1] + '</span></td></tr>').join('');
+  }
+  document.getElementById('f').addEventListener('submit', e => {
+    e.preventDefault();
+    const id = document.getElementById('sub').value.trim().toLowerCase().replace(/[^a-z0-9]/g,'') || 'council' + Date.now();
+    if (A.state.councils.find(c => c.id === id)) { A.toast('That web address is already used'); return; }
+    const mods = [...document.querySelectorAll('#mods input:checked')].map(i => i.value);
+    A.state.councils.push({ id, name: document.getElementById('nen').value, nameFr: document.getElementById('nfr').value, region: document.getElementById('reg').value, lang: document.getElementById('lng').value, status: 'New', since: A.TODAY, modules: mods, register: document.getElementById('reg2').value }); A.save();
+    document.getElementById('out').innerHTML = '<div class="notice n-ok">Council created. Address: <strong>' + id + '.councils.example</strong>. An invitation was sent to the first administrator. It now appears in the council selector of the citizen, registrar and management views.</div>';
+    render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

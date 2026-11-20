@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Our council</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+<style>
+.pbar{background:var(--tint);border-radius:6px;height:10px;overflow:hidden}.pbar i{display:block;height:100%;background:var(--green)}
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.gal figure{margin:0;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.gal figure img,.gal figure svg{display:block;width:100%;height:150px;object-fit:cover}
+.gal figcaption{padding:10px 12px;font-size:13px}
+.ev{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+.ev .d{min-width:58px;text-align:center;background:var(--green);color:#fff;border-radius:10px;padding:6px 4px}
+.ev .d b{display:block;font-size:22px;line-height:1.1}
+.subnav{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0}
+</style>
+</head>
+<body data-portal="citizen" data-page="council">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:22px">
+  <section class="hero">
+    <span class="small" style="color:#CFE3D9" id="kicker"></span>
+    <h1 id="title"></h1>
+    <p id="mayor"></p>
+    <div class="row" id="notices"></div>
+  </section>
+  <nav class="subnav row" aria-label="Sections" id="subnav"></nav>
+
+  <section id="projects" class="stack">
+    <div class="row between"><h2 id="pH"></h2><div class="chips" id="pf"></div></div>
+    <div class="grid g2" id="plist"></div>
+  </section>
+
+  <section id="events" class="stack">
+    <h2 id="eH"></h2>
+    <div class="grid g2" id="elist"></div>
+  </section>
+
+  <section id="news" class="stack">
+    <div class="row between"><h2 id="nH"></h2><a href="news.html" class="small" id="nAll"></a></div>
+    <div class="grid g3" id="nlist"></div>
+  </section>
+
+  <section id="gallery" class="stack">
+    <h2 id="gH"></h2>
+    <div class="gal" id="glist"></div>
+  </section>
+
+  <section id="reports" class="grid g2">
+    <div class="card stack"><h2 id="rH"></h2><div class="stack" id="rlist"></div></div>
+    <div class="card stack" id="contact"></div>
+  </section>
+</main>
+<div class="modal-bg" id="pm" role="dialog" aria-modal="true" aria-labelledby="pmTitle"><div class="modal" style="max-width:620px" id="pmBody"></div></div>
+<script>
+(function(){
+  const A = App, D = DATA; const fr = () => A.state.lang === 'fr'; const L = (e,f) => fr() ? f : e; const i = () => fr() ? 1 : 0;
+  let pfilter = 'All';
+  const SFR = { 'In progress': 'En cours', 'Planned': 'Prévu', 'Completed': 'Terminé', 'All': 'Tous' };
+  const sl = s => fr() ? (SFR[s] || s) : s;
+  function hub(){
+    const base = D.hub[A.state.council] || { mayor: ['Welcome. This council has not published content yet.','Bienvenue.'], contact: {}, projects: [], events: [], reports: [], gallery: [], notices: [] };
+    const p = (A.state.pub || {})[A.state.council] || {};
+    const ov = p.overrides || {};
+    const projs = (p.projects || []).concat(base.projects).map(x => ov[x.id] ? { ...x, progress: ov[x.id].progress, status: ov[x.id].status, updates: ov[x.id].updates.concat(x.updates) } : x);
+    return { ...base, projects: projs, events: (p.events || []).concat(base.events).sort((a,b) => a.date.localeCompare(b.date)), reports: (p.reports || []).concat(base.reports), gallery: (p.gallery || []).concat(base.gallery), notices: (p.notices || []).concat(base.notices), news: p.news || [] };
+  }
+  function scene(sc){
+    const g = 'style="fill:var(--green)"', a = 'style="fill:var(--gold)"', t = 'style="fill:var(--tint)"';
+    const S = {
+      lights: '<rect width="300" height="150" style="fill:#1B2433"/>' + [40,110,180,250].map(x => '<rect x="' + x + '" y="40" width="5" height="90" fill="#9AA3A0"/><circle cx="' + (x+2) + '" cy="38" r="9" ' + a + '/><circle cx="' + (x+2) + '" cy="38" r="22" ' + a + ' opacity=".18"/>').join('') + '<rect y="128" width="300" height="22" ' + g + '/>',
+      doc: '<rect width="300" height="150" ' + t + '/><rect x="95" y="18" width="110" height="120" rx="6" fill="#fff" stroke="#1B1B1B"/><rect x="110" y="34" width="60" height="6" ' + g + '/><rect x="110" y="50" width="80" height="4" fill="#C9D2CE"/><rect x="110" y="60" width="70" height="4" fill="#C9D2CE"/><rect x="150" y="92" width="34" height="34" fill="#1B1B1B"/><rect x="155" y="97" width="10" height="10" fill="#fff"/>',
+      road: '<rect width="300" height="150" fill="#BFE0F5"/><path d="M0 150 L120 60 L180 60 L300 150Z" fill="#555"/><path d="M148 70 L152 70 L156 150 L144 150Z" fill="#fff"/><rect y="100" width="300" height="50" ' + g + ' opacity=".35"/>',
+      people: '<rect width="300" height="150" ' + t + '/>' + [60,110,160,210].map((x,k) => '<circle cx="' + x + '" cy="62" r="16" fill="#8A5A3C"/><rect x="' + (x-20) + '" y="80" width="40" height="55" rx="14" ' + (k % 2 ? a : g) + '/>').join(''),
+      hall: '<rect width="300" height="150" ' + t + '/><polygon points="40,60 150,18 260,60" ' + g + '/>' + [60,100,140,180,220].map(x => '<rect x="' + x + '" y="62" width="16" height="70" fill="#fff" stroke="#C9D2CE"/>').join('') + '<rect x="40" y="130" width="220" height="10" ' + g + '/>',
+      clean: '<rect width="300" height="150" fill="#DFF0D5"/><circle cx="250" cy="30" r="16" ' + a + '/>' + [70,150,220].map((x,k) => '<circle cx="' + x + '" cy="70" r="13" fill="#6B4A32"/><rect x="' + (x-15) + '" y="85" width="30" height="45" rx="10" ' + (k === 1 ? a : g) + '/>').join('') + '<rect x="100" y="110" width="22" height="26" fill="#444441"/>'
+    };
+    return '<svg viewBox="0 0 300 150" role="img" aria-label="Illustration placeholder">' + (S[sc] || S.hall) + '</svg>';
+  }
+  const money = n => (n/1e6).toLocaleString('en-US') + 'M FCFA';
+  function render(){
+    const H = hub(), c = A.council();
+    document.getElementById('kicker').textContent = L('Information for residents · updated by the council','Information des habitants · publiée par la commune');
+    document.getElementById('title').textContent = c.name;
+    document.getElementById('mayor').textContent = H.mayor[i()];
+    document.getElementById('notices').innerHTML = H.notices.map(n => '<span class="badge" style="background:var(--gold);color:var(--gold-ink);font-size:13px;white-space:normal">' + A.esc(n[i()]) + '</span>').join('');
+    const secs = [['projects', L('Projects','Projets')],['events', L('Upcoming events','Événements à venir')],['news', L('News','Actualités')],['gallery', L('Photo gallery','Galerie photos')],['reports', L('Reports and contacts','Rapports et contacts')]];
+    document.getElementById('subnav').innerHTML = secs.map(x => '<a class="btn sm ghost" href="#' + x[0] + '">' + x[1] + '</a>').join('');
+    document.getElementById('pH').textContent = L('Projects in our council','Projets de la commune');
+    document.getElementById('pf').innerHTML = ['All','In progress','Planned','Completed'].map(s => '<button class="chip" style="' + (s === pfilter ? 'background:var(--green);color:#fff' : '') + '" data-pf="' + s + '">' + sl(s) + ' (' + (s === 'All' ? H.projects.length : H.projects.filter(p => p.status === s).length) + ')</button>').join('');
+    document.querySelectorAll('[data-pf]').forEach(b => b.onclick = () => { pfilter = b.dataset.pf; render(); });
+    document.getElementById('plist').innerHTML = H.projects.filter(p => pfilter === 'All' || p.status === pfilter).map(p => {
+      const f = A.state.follows.includes(p.id);
+      return '<article class="card stack" style="gap:8px"><div class="row between"><span class="badge ' + ({ 'In progress':'b-info','Planned':'b-warn','Completed':'b-ok' }[p.status]) + '">' + sl(p.status) + '</span><span class="small muted">' + A.esc(p.place) + '</span></div><h3>' + A.esc(p.title[i()]) + '</h3><p class="small" style="margin:0">' + A.esc(p.desc[i()]) + '</p>' +
+        '<div class="row between small"><span>' + L('Progress','Avancement') + '</span><strong>' + p.progress + '%</strong></div><div class="pbar"><i style="width:' + p.progress + '%"></i></div>' +
+        '<div class="row between small muted"><span>' + money(p.budget) + ' · ' + A.esc(p.funder) + '</span><span>' + A.dateFmt(p.start) + ' → ' + A.dateFmt(p.end) + '</span></div>' +
+        '<div class="row"><button class="btn sm" data-pd="' + p.id + '">' + L('Details and updates','Détails et mises à jour') + '</button><button class="btn sm ghost" data-fo="' + p.id + '">' + (f ? '✓ ' + L('Following','Suivi') : L('Follow (SMS updates)','Suivre (SMS)')) + '</button></div></article>';
+    }).join('') || '<p class="muted">' + L('No projects.','Aucun projet.') + '</p>';
+    document.querySelectorAll('[data-fo]').forEach(b => b.onclick = () => { const id = b.dataset.fo; A.state.follows = A.state.follows.includes(id) ? A.state.follows.filter(x => x !== id) : A.state.follows.concat([id]); A.save(); A.toast(A.state.follows.includes(id) ? L('You will get an SMS when this project is updated','Vous recevrez un SMS à chaque mise à jour') : L('Unfollowed','Suivi arrêté')); render(); });
+    document.querySelectorAll('[data-pd]').forEach(b => b.onclick = () => detail(H.projects.find(p => p.id === b.dataset.pd)));
+    document.getElementById('eH').textContent = L('Upcoming events','Événements à venir');
+    const M = fr() ? ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'] : ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    document.getElementById('elist').innerHTML = H.events.filter(e => e.date >= A.TODAY).map(e => '<div class="ev"><div class="d"><b>' + (+e.date.slice(8)) + '</b><span class="small">' + M[+e.date.slice(5,7)-1] + '</span></div><div class="stack" style="gap:4px;flex:1"><strong>' + A.esc(e.title[i()]) + '</strong><span class="small muted">' + e.time + ' · ' + A.esc(e.place) + ' · ' + e.cat + '</span><div class="row"><button class="btn sm ghost" data-ics="' + e.id + '">' + L('Add to calendar','Ajouter au calendrier') + '</button><button class="btn sm ghost" data-rm="' + e.id + '">' + L('SMS reminder','Rappel SMS') + '</button></div></div></div>').join('');
+    document.querySelectorAll('[data-ics]').forEach(b => b.onclick = () => ics(H.events.find(e => e.id === b.dataset.ics)));
+    document.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => A.toast(L('SMS reminder set for the day before','Rappel SMS la veille')));
+    document.getElementById('nH').textContent = L('Latest news','Dernières actualités'); document.getElementById('nAll').textContent = L('All news, decisions and jobs','Toutes les actualités');
+    const news = H.news.concat(A.state.council === 'limbe2' ? D.news : []).slice(0,3);
+    document.getElementById('nlist').innerHTML = news.length ? news.map(n => '<article class="card stack" style="gap:6px"><span class="small muted">' + A.dateFmt(n.date) + ' · ' + n.tag + '</span><strong>' + A.esc(n.title[i()]) + '</strong><span class="small">' + A.esc(n.body[i()]) + '</span></article>').join('') : '<p class="muted">' + L('No news yet.','Pas encore d’actualités.') + '</p>';
+    document.getElementById('gH').textContent = L('Photo gallery','Galerie photos');
+    document.getElementById('glist').innerHTML = H.gallery.map(g => '<figure>' + (g.img ? '<img src="' + g.img + '" alt="' + A.esc(g.t[i()]) + '">' : scene(g.scene)) + '<figcaption><strong>' + A.esc(g.t[i()]) + '</strong><br><span class="muted">' + A.dateFmt(g.d) + '</span></figcaption></figure>').join('') + '<p class="small muted" style="grid-column:1/-1;margin:0">' + L('Drawings are placeholders; councils upload their own photos from Administration › Public page.','Les dessins sont des exemples ; la commune publie ses propres photos.') + '</p>';
+    document.getElementById('rH').textContent = L('Reports and documents','Rapports et documents');
+    document.getElementById('rlist').innerHTML = H.reports.map(r => '<button class="row between" style="border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left" onclick="App.toast(\'Opening document (demo)\')"><strong class="small">' + A.esc(r[i()]) + '</strong><span class="small muted">' + r[2] + '</span></button>').join('') + '<a class="small" href="news.html">' + L('Council decisions and budgets','Décisions et budgets') + '</a>';
+    const C = H.contact;
+    document.getElementById('contact').innerHTML = '<h2>' + L('Contact the council','Contacter la commune') + '</h2><table><tbody>' + [[L('Address','Adresse'), C.address],[L('Phone','Téléphone'), C.phone],['Email', C.email],[L('Opening hours','Horaires'), C.hours]].map(x => '<tr><td class="muted small">' + x[0] + '</td><td>' + A.esc(x[1] || '—') + '</td></tr>').join('') + '</tbody></table><div class="row"><a class="btn sm" href="assistant.html">' + L('Ask the assistant','Demander à l’assistant') + '</a><a class="btn sm ghost" href="complaints.html">' + A.t('nav.complaints') + '</a></div>';
+  }
+  function detail(p){
+    const b = document.getElementById('pmBody');
+    b.innerHTML = '<div class="row between"><h3 id="pmTitle">' + A.esc(p.title[i()]) + '</h3><button class="btn sm ghost" id="pmX" aria-label="Close">✕</button></div><span class="small muted">' + sl(p.status) + ' · ' + p.progress + '% · ' + money(p.budget) + ' · ' + A.esc(p.funder) + '</span><div class="pbar"><i style="width:' + p.progress + '%"></i></div><p style="margin:0">' + A.esc(p.desc[i()]) + '</p><h3>' + L('Updates','Mises à jour') + '</h3><div class="timeline">' + p.updates.map(u => '<div class="tl done"><div class="dot"><i></i><b></b></div><div class="txt"><strong class="small">' + A.esc(u[1]) + '</strong><div class="small muted">' + A.dateFmt(u[0]) + '</div></div></div>').join('') + '</div>' +
+      '<label class="f">' + L('Your comment or question about this project','Votre commentaire ou question') + '<textarea id="pfb">' + L('Will the lights cover the fish section too?','') + '</textarea></label><button class="btn sm" id="pfs" style="align-self:flex-start">' + L('Send to the council','Envoyer') + '</button>';
+    document.getElementById('pm').classList.add('show');
+    document.getElementById('pmX').onclick = () => document.getElementById('pm').classList.remove('show');
+    document.getElementById('pfs').onclick = () => { const ref = 'CMP-2026-0' + (150 + A.state.complaints.length); A.state.complaints.unshift({ ref, topic: 'Project feedback', text: p.title[0] + ': ' + document.getElementById('pfb').value, date: A.TODAY, status: 'New', service: 'Projects', reply: '' }); A.save(); A.toast(L('Sent. Reference ','Envoyé. Référence ') + ref); document.getElementById('pm').classList.remove('show'); };
+  }
+  function ics(e){
+    const d = e.date.replace(/-/g,''), tm = e.time.replace(':','') + '00';
+    const txt = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Council platform prototype//EN','BEGIN:VEVENT','UID:' + e.id + '@council.example','DTSTAMP:20261112T000000Z','DTSTART:' + d + 'T' + tm,'DURATION:PT2H','SUMMARY:' + e.title[i()],'LOCATION:' + e.place,'END:VEVENT','END:VCALENDAR'].join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/calendar' })); a.download = e.id + '.ics'; document.body.appendChild(a); a.click(); a.remove();
+  }
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Field agent app</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+</head>
+<body data-portal="agent" data-page="agent">
+<div id="shell"></div>
+<main class="wrap" style="max-width:480px">
+  <div class="stack" style="gap:16px">
+    <div class="stack" style="gap:2px"><h1 style="font-size:23px">Field checks</h1><span class="small muted">Agent Molua (demo) · checks are logged · works offline with today's list</span></div>
+    <div class="grid g3">
+      <button class="btn gold" data-scan="MR-0937">Scan rider badge</button>
+      <button class="btn gold" data-scan="RC-2026-77310">Scan receipt</button>
+      <button class="btn gold" data-scan="OP-0389">Scan licence</button>
+    </div>
+    <form id="f" class="card row"><label class="f" style="flex:1 1 200px">Or type a number<input type="text" id="no" placeholder="MR-1022, OP-0412, LMB2-2026-B-01482"></label><button class="btn" style="align-self:flex-end">Check</button></form>
+    <div id="out"></div>
+    <div class="notice n-info small">If the result is valid, no payment may be collected on the spot. Never accept cash: direct people to the app, USSD or the council cashier.</div>
+    <section class="card stack"><h2>Help a resident without a phone</h2><p class="small muted" style="margin:0">As a community relay, use the assistant on the resident's behalf. Their consent is recorded and they hear every answer read aloud.</p>
+      <label class="f">Resident's name<input type="text" id="rname" value="Mami Grace Efange"></label>
+      <label class="row small"><input type="checkbox" id="rcons" style="width:20px;height:20px"> The resident agrees that I ask for them</label>
+      <button class="btn" type="button" id="relayGo" style="align-self:flex-start">Open the assistant for this resident</button></section>
+    <section class="card stack"><h2>Today's checks</h2><div id="log" class="stack"></div></section>
+  </div>
+</main>
+<script>
+(function(){
+  const A = App, D = DATA, log = [];
+  function check(no){
+    const v = no.trim().toUpperCase(); let res;
+    const r = A.RIDERS.find(x => x.no === v), o = D.operators.find(x => x.id === v), q = A.state.requests.find(x => (x.certNo||'').toUpperCase() === v || (x.receipt||'').toUpperCase() === v || (v === 'RC-2026-77310' && x.id === 'BC-2026-01482'));
+    if (r) res = [r.paidUntil >= A.TODAY, 'Rider · ' + r.name + ' · ' + r.plate, (r.paidUntil >= A.TODAY ? 'Fees paid until ' : 'Expired on ') + A.dateFmt(r.paidUntil) + (r.jacket ? ' · jacket issued' : ' · no jacket yet')];
+    else if (o) res = [o.paid >= A.TODAY, 'Operator · ' + o.name, o.type + ' · category ' + o.cat + ' · ' + (o.paid >= A.TODAY ? 'paid until ' : 'expired on ') + A.dateFmt(o.paid)];
+    else if (q) res = [true, (q.receipt || v.startsWith('RC') ? 'Receipt' : 'Certificate') + ' · ' + q.type, 'Issued by ' + ((A.state.councils.find(c => c.id === q.council)||{}).name) + ' · genuine'];
+    else res = [false, 'Not found', 'No record matches ' + v + '. Possibly fake: ask the person to contact the council.'];
+    document.getElementById('out').innerHTML = '<div class="card stack" style="border:3px solid ' + (res[0] ? '#1D9E75' : '#A32D2D') + '"><span class="badge ' + (res[0] ? 'b-ok' : 'b-risk') + '" style="align-self:flex-start;font-size:16px">' + (res[0] ? '✓ VALID' : (res[1] === 'Not found' ? '✗ NOT FOUND' : '✗ EXPIRED')) + '</span><strong>' + A.esc(res[1]) + '</strong><span>' + A.esc(res[2]) + '</span>' + (res[0] ? '' : '<span class="small muted">The person can pay now by app or USSD *123*45#. You will see the update immediately.</span>') + '</div>';
+    log.unshift([new Date().toTimeString().slice(0,5), v, res[0] ? 'Valid' : res[1] === 'Not found' ? 'Not found' : 'Expired']);
+    document.getElementById('log').innerHTML = log.map(l => '<div class="row between small" style="border-bottom:1px solid var(--line);padding:6px 0"><span>' + l[0] + ' · ' + l[1] + '</span><span class="badge ' + (l[2] === 'Valid' ? 'b-ok' : 'b-risk') + '">' + l[2] + '</span></div>').join('');
+  }
+  document.querySelectorAll('[data-scan]').forEach(b => b.onclick = () => { A.toast('QR scanned (demo)'); check(b.dataset.scan); });
+  document.getElementById('f').addEventListener('submit', e => { e.preventDefault(); check(document.getElementById('no').value); });
+})();
+</script>
+<script>
+document.getElementById('relayGo').onclick = () => { if (!document.getElementById('rcons').checked) { App.toast('Ask the resident for consent first'); return; } location.href = 'assistant.html?relay=' + encodeURIComponent('Agent Molua for ' + document.getElementById('rname').value); };
+</script>
+</body>
+</html>

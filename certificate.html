@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Certificate and receipt</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="citizen" data-page="track">
+<div id="shell"></div>
+<main class="wrap" style="max-width:720px">
+  <div class="stack" id="box" style="gap:18px"></div>
+</main>
+<script>
+(function(){
+  const A = App;
+  function render(){
+    const fr = A.state.lang === 'fr', box = document.getElementById('box');
+    const r = A.findReq(A.param('id') || 'BC-2026-01482');
+    if (!r) { box.innerHTML = '<p>Not found.</p>'; return; }
+    const receipt = r.receipt || 'RC-2026-77310';
+    const certReady = r.status === 'Ready' || r.status === 'Collected';
+    box.innerHTML =
+      (r.fee === 0 ? '<div class="notice n-ok">' + (fr?'Déclaration gratuite dans le délai légal : aucun paiement.':'Free registration within the legal period: nothing to pay.') + '</div>' :
+      '<div class="card row" style="gap:16px"><span class="badge b-ok" style="font-size:14px">✓ ' + (fr?'Paiement reçu':'Payment received') + '</span><div class="stack" style="gap:2px"><strong>' + (fr?'Reçu ':'Receipt ') + receipt + '</strong><span class="small muted">' + A.fmt(r.fee) + ' · ' + A.esc(r.payMethod || 'MTN Mobile Money') + ' · ' + A.dateFmt(A.TODAY) + '</span></div><div style="margin-left:auto">' + A.qrSvg(receipt, 84) + '</div></div>') +
+      (certReady ?
+      '<div class="cert stack"><div class="wm">SAMPLE<br>NOT A VALID DOCUMENT</div>' +
+        '<div class="row between"><div class="stack" style="gap:0"><span class="small muted">Prototype layout · fictional data</span><strong style="font-size:18px">' + (r.type.includes('Death') ? 'Death certificate · Acte de décès' : r.type.includes('Copy') ? 'Certified copy · Copie certifiée' : 'Birth certificate · Acte de naissance') + '</strong><span class="small">' + A.esc(A.council().name) + ' · Civil status centre</span></div>' + A.qrSvg(r.certNo || r.id, 110) + '</div>' +
+        '<table><tbody>' + [['Name · Nom', r.name],['Date', A.dateFmt(r.created)],['Parent', r.parent || '—'],['Record no. · N° d’acte', r.certNo || '[national format]'],['Signed by · Signé par', 'Registrar [name] (digital signature)']].map(x => '<tr><td class="muted">' + x[0] + '</td><td><strong>' + A.esc(x[1]) + '</strong></td></tr>').join('') + '</tbody></table>' +
+        '<span class="small muted">' + (fr?'Scannez le QR code ou saisissez le numéro sur la page Vérifier pour confirmer l’authenticité.':'Scan the QR code, or enter the record number on the Verify page, to confirm it is genuine.') + '</span></div>' +
+      '<div class="row"><button class="btn" onclick="window.print()">' + (fr?'Télécharger / imprimer':'Download / print') + '</button><a class="btn ghost" href="verify.html?no=' + encodeURIComponent(r.certNo || '') + '">' + A.t('nav.verify') + '</a><a class="btn ghost" href="index.html">' + A.t('nav.home') + '</a></div>' +
+      '<div class="notice n-info">' + (fr?'Copie imprimée : à retirer au service d’état civil à partir de demain 10h. Présentez le reçu.':'Printed copy: collect at the civil status office from tomorrow, 10am. Show this receipt.') + '</div>'
+      : '<div class="notice n-info">' + (fr?'Paiement enregistré. Le document sera disponible après signature.':'Payment recorded. The document will be available once the registrar signs it.') + '</div><a class="btn" href="track.html?id=' + r.id + '">' + A.t('nav.track') + '</a>');
+  }
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

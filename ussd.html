@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Basic phone (USSD)</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="citizen" data-page="ussd">
+<div id="shell"></div>
+<main class="wrap">
+  <div class="split" style="align-items:center">
+    <section class="main stack" style="align-items:center">
+      <div class="phone">
+        <div class="scr" id="scr" aria-live="polite"></div>
+        <div class="keys" id="keys"></div>
+      </div>
+    </section>
+    <aside class="side card stack">
+      <h2 id="t"></h2>
+      <p style="margin:0" id="p1"></p>
+      <ol class="small" style="margin:0;padding-left:18px" id="tips"></ol>
+      <button class="btn ghost" id="restart"></button>
+    </aside>
+  </div>
+</main>
+<script>
+(function(){
+  const A = App; let mode = 'dial', buf = '', ulang = A.state.lang === 'fr' ? 'fr' : 'en';
+  const scr = document.getElementById('scr');
+  const M = {
+    en: { menu: A.council().name + '\n1. Birth registration\n2. Check my request\n3. Official fees\n4. Pay a fee\n5. Call me back (voice)\n6. Français', ask: 'Enter the last 5 digits of your request number:', notfound: 'Request not found.\n0. Menu', fees: 'Official fees (demo)\nCopy: 2,000\nLate reg.: 5,000\nRider jacket: 6,500\n0. Menu', birth: 'Born in a health centre? You will get an SMS to confirm.\nBorn at home? Visit the council with 2 witnesses.\n5. Call me back\n0. Menu', pay: 'Enter request digits to pay:', payok: n => 'Pay ' + n + ' to ' + A.council().name + '?\n1. Confirm with MoMo PIN\n0. Cancel', paid: 'Payment request sent. Enter your PIN on the next screen.\nReceipt by SMS.\n0. Menu', cb: 'Voice assistant language:\n1. English\n2. Pidgin\n3. Français', cbok: 'The council voice assistant will call you within 2 minutes.\n0. Menu', reply: 'Reply: ' },
+    fr: { menu: A.council().name + '\n1. Déclarer une naissance\n2. Suivre ma demande\n3. Tarifs officiels\n4. Payer\n5. Me rappeler (voix)\n6. English', ask: 'Entrez les 5 derniers chiffres de votre demande :', notfound: 'Demande introuvable.\n0. Menu', fees: 'Tarifs (démo)\nCopie : 2 000\nTardive : 5 000\nChasuble : 6 500\n0. Menu', birth: 'Né au centre de santé ? Vous recevrez un SMS.\nNé à domicile ? Venez avec 2 témoins.\n5. Me rappeler\n0. Menu', pay: 'Chiffres de la demande à payer :', payok: n => 'Payer ' + n + ' à la commune ?\n1. Confirmer (PIN)\n0. Annuler', paid: 'Demande de paiement envoyée. Saisissez votre PIN.\nReçu par SMS.\n0. Menu', cb: 'Langue de l’assistant vocal :\n1. Anglais\n2. Pidgin\n3. Français', cbok: 'L’assistant vocal vous appelle dans 2 minutes.\n0. Menu', reply: 'Réponse : ' }
+  };
+  let screen = '', pending = null;
+  function show(){ scr.textContent = mode === 'dial' ? (buf || 'Dial *123*45#') + '\n\n\n\n(press the green key)' : screen + '\n' + M[ulang].reply + buf + '_'; }
+  function go(s){ screen = s; buf = ''; show(); }
+  function find(d){ return A.state.requests.find(r => r.id.endsWith(d)); }
+  function submit(){
+    const L = M[ulang], v = buf;
+    if (mode === 'dial') { if (buf.replace(/\s/g,'') === '*123*45#') { mode = 'menu'; go(L.menu); } else { buf = ''; scr.textContent = 'Invalid code.\nDial *123*45#'; } return; }
+    if (mode === 'menu') {
+      if (v === '1') { mode = 'info'; go(L.birth); } else if (v === '2') { mode = 'track'; go(L.ask); } else if (v === '3') { mode = 'info'; go(L.fees); } else if (v === '4') { mode = 'pay'; go(L.pay); } else if (v === '5') { mode = 'cb'; go(L.cb); } else if (v === '6') { ulang = ulang === 'en' ? 'fr' : 'en'; go(M[ulang].menu); } else go(L.menu); return;
+    }
+    if (v === '0') { mode = 'menu'; go(L.menu); return; }
+    if (mode === 'info' && v === '5') { mode = 'cb'; go(L.cb); return; }
+    if (mode === 'track') { const r = find(v); mode = 'info'; go(r ? r.id + '\n' + A.plain(r).slice(0,110) + '\n0. Menu' : L.notfound); return; }
+    if (mode === 'pay') { const r = find(v); if (!r) { mode = 'info'; go(L.notfound); return; } pending = r; mode = 'payc'; go(L.payok(A.fmt(r.fee))); return; }
+    if (mode === 'payc') { mode = 'info'; go(v === '1' ? L.paid : L.menu); return; }
+    if (mode === 'cb') { mode = 'info'; go(L.cbok); return; }
+  }
+  const K = ['1','2','3','4','5','6','7','8','9','*','0','#'];
+  document.getElementById('keys').innerHTML = K.map(k => '<button type="button" data-k="' + k + '">' + k + '</button>').join('') + '<button type="button" data-k="del" aria-label="Delete">⌫</button><button type="button" data-k="end" aria-label="End">✕</button><button type="button" data-k="ok" class="send" aria-label="Send">✓</button>';
+  document.querySelectorAll('#keys button').forEach(b => b.onclick = () => { const k = b.dataset.k; if (k === 'ok') submit(); else if (k === 'del') { buf = buf.slice(0,-1); show(); } else if (k === 'end') { mode = 'dial'; buf = ''; show(); } else { buf += k; show(); } });
+  function texts(){
+    const fr = A.state.lang === 'fr';
+    document.getElementById('t').textContent = fr ? 'Pas de smartphone ? Pas de problème.' : 'No smartphone? No problem.';
+    document.getElementById('p1').textContent = fr ? 'Tout citoyen peut suivre une demande, voir les tarifs, payer ou être rappelé par l’assistant vocal depuis un téléphone simple.' : 'Anyone can check a request, see official fees, pay by mobile money or get a call back from the voice assistant from a basic phone.';
+    document.getElementById('tips').innerHTML = (fr ? ['Tapez *123*45# puis ✓','Choisissez 2, puis 01482, puis ✓','0 pour revenir au menu'] : ['Type *123*45# then ✓','Choose 2, then enter 01482, then ✓','Press 0 to go back to the menu']).map(x => '<li>' + x + '</li>').join('');
+    document.getElementById('restart').textContent = fr ? 'Recommencer' : 'Start again';
+  }
+  document.getElementById('restart').onclick = () => { mode = 'dial'; buf = ''; show(); };
+  texts(); show(); document.addEventListener('langchange', texts);
+})();
+</script>
+</body>
+</html>

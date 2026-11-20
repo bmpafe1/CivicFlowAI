@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pay a fee</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="citizen" data-page="track">
+<div id="shell"></div>
+<main class="wrap" style="max-width:640px">
+  <div class="card stack" id="box"></div>
+</main>
+<div class="modal-bg" id="pin" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
+  <div class="modal">
+    <h3 id="pinTitle">Mobile money</h3>
+    <p class="small muted" style="margin:0" id="pinText"></p>
+    <label class="f">PIN (demo: any 4 digits)<input type="password" id="pinIn" maxlength="4" inputmode="numeric"></label>
+    <div class="row"><button class="btn" id="pinOk">Confirm</button><button class="btn ghost" id="pinNo">Cancel</button></div>
+  </div>
+</div>
+<script>
+(function(){
+  const A = App; let r;
+  function render(){
+    const fr = A.state.lang === 'fr', box = document.getElementById('box');
+    r = A.findReq(A.param('id') || 'LR-2026-00199');
+    if (!r) { box.innerHTML = '<p>Request not found.</p>'; return; }
+    if (r.paid || r.fee === 0) { location.replace('certificate.html?id=' + r.id); return; }
+    box.innerHTML =
+      '<h1 style="font-size:23px">' + (fr?'Paiement':'Payment') + '</h1>' +
+      '<p class="muted" style="margin:0">' + r.id + ' · ' + A.esc(r.type) + ' · ' + A.esc(r.name) + '</p>' +
+      '<table><tbody><tr><td>' + A.esc(r.type) + (fr?' : frais officiels':': official fee') + '</td><td style="text-align:right"><strong>' + A.fmt(r.fee) + '</strong></td></tr><tr><td><strong>Total</strong></td><td style="text-align:right"><strong>' + A.fmt(r.fee) + '</strong></td></tr></tbody></table>' +
+      '<div class="notice n-ok">' + (fr?'C’est le tarif officiel de la commune. Personne ne doit vous demander plus, ni en espèces hors de la commune.':'This is the official council fee. Nobody should ask you for more, or for cash outside the council.') + '</div>' +
+      '<fieldset style="border:0;padding:0;margin:0" class="stack"><legend style="font-weight:600;margin-bottom:8px">' + (fr?'Payer avec':'Pay with') + '</legend>' +
+      [['mtn','MTN Mobile Money', r.phone],['orange','Orange Money',''],['cash', fr?'Au guichet de la commune':'At the council cashier', fr?'Même reçu QR':'You still get the same QR receipt']].map((o,i) => '<label class="row" style="border:1px solid var(--line);border-radius:12px;padding:12px 14px"><input type="radio" name="m" value="' + o[0] + '"' + (i===0?' checked':'') + ' style="width:20px;height:20px"><span class="stack" style="gap:0"><strong>' + o[1] + '</strong><span class="small muted">' + A.esc(o[2]) + '</span></span></label>').join('') + '</fieldset>' +
+      '<button class="btn" id="pay">' + (fr?'Payer ':'Pay ') + A.fmt(r.fee) + '</button>';
+    document.getElementById('pay').onclick = () => {
+      const m = document.querySelector('input[name=m]:checked').value;
+      if (m === 'cash') { A.toast(fr?'Présentez ce numéro au guichet : ':'Show this number at the cashier: ' + r.id); return; }
+      document.getElementById('pinText').textContent = (fr?'Confirmez le paiement de ':'Confirm payment of ') + A.fmt(r.fee) + (fr?' à ':' to ') + A.council().name + ' (demo).';
+      document.getElementById('pin').classList.add('show'); document.getElementById('pinIn').focus();
+    };
+  }
+  document.getElementById('pinNo').onclick = () => document.getElementById('pin').classList.remove('show');
+  document.getElementById('pinOk').onclick = () => {
+    if (!/^\d{4}$/.test(document.getElementById('pinIn').value)) { A.toast('Enter 4 digits'); return; }
+    const method = document.querySelector('input[name=m]:checked').value === 'mtn' ? 'MTN Mobile Money' : 'Orange Money';
+    const receipt = 'RC-2026-' + String(77300 + Math.floor(Math.random()*600)).padStart(5,'0');
+    const patch = { paid: true, receipt, payMethod: method };
+    if (r.status === 'Awaiting payment') { if (r.retrieval) { patch.status = 'Retrieval in progress'; } else { patch.status = 'Ready'; patch.certNo = A.certPrefix(r.council) + '-2026-' + r.id.slice(0,1) + '-' + r.id.slice(-5); } }
+    A.updateRequest(r.id, patch, 'Paid ' + A.fmt(r.fee) + ' by ' + method + ' · receipt ' + receipt);
+    if (r.autoIssue) A.updateRequest(r.id, {}, 'Issued automatically from the digitised, verified register (council e-seal)');
+    if (r.retrieval) A.updateRequest(r.id, {}, 'Retrieval task sent to the archives: clerk to scan the register page');
+    location.href = 'certificate.html?id=' + r.id;
+  };
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

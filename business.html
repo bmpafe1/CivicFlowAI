@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Business, licences and riders</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+</head>
+<body data-portal="citizen" data-page="business">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <div class="stack" style="gap:4px"><h1 id="h"></h1><p class="muted" style="margin:0" id="intro"></p></div>
+  <div class="grid g3">
+    <a class="tile" href="rider.html"><strong id="tr1"></strong><span class="small muted" id="tr2"></span></a>
+    <a class="tile" href="services.html#business"><strong id="tc1"></strong><span class="small muted" id="tc2"></span></a>
+    <a class="tile" href="learn.html"><strong id="tl1"></strong><span class="small muted" id="tl2"></span></a>
+  </div>
+  <div class="grid g2">
+    <section class="card stack">
+      <h2 id="gTitle"></h2>
+      <label class="f"><span id="gL"></span><select id="gType"></select></label>
+      <ol id="gSteps" class="stack" style="gap:6px;margin:0;padding-left:20px"></ol>
+      <button class="btn" id="apply"></button>
+      <div id="applyOut"></div>
+    </section>
+    <section class="card stack">
+      <h2 id="rTitle"></h2>
+      <form id="rf" class="row"><label class="f" style="flex:1 1 200px"><span id="rL"></span><input type="text" id="op" value="OP-0389"></label><button class="btn" style="align-self:flex-end" id="rBtn"></button></form>
+      <div class="small muted">OP-0412 · OP-0389 · OP-0501</div>
+      <div id="opOut"></div>
+    </section>
+  </div>
+  <div class="grid g2">
+    <section class="card stack">
+      <h2 id="mTitle"></h2>
+      <div class="grid g2"><label class="f"><span id="mL1"></span><input type="text" id="stall" value="Mile 4 market · Stall B-17"></label><label class="f"><span id="mL2"></span><select id="months"><option value="1">1</option><option value="3" selected>3</option><option value="6">6</option></select></label></div>
+      <div class="row between"><span id="mTotal"></span><button class="btn" id="mPay"></button></div>
+      <label class="row small"><input type="checkbox" id="remind" checked style="width:20px;height:20px"> <span id="remL"></span></label>
+    </section>
+    <section class="card stack">
+      <h2 id="dTitle"></h2>
+      <p class="small muted" style="margin:0" id="dIntro"></p>
+      <label class="f"><span id="dL1"></span><input type="text" id="dRef" value="RC-2026-77102"></label>
+      <label class="f"><span id="dL2"></span><textarea id="dText">I was charged category B tax but my turnover is under 2 million FCFA.</textarea></label>
+      <button class="btn ghost" id="dBtn"></button>
+      <div id="dOut"></div>
+    </section>
+  </div>
+</main>
+<script>
+(function(){
+  const A = App, D = DATA; const fr = () => A.state.lang === 'fr'; const L = (e,f) => fr() ? f : e;
+  const GUIDES = {
+    shop: [['Small shop or kiosk','Boutique'], [['Check your tax category (2 min)','Vérifier votre catégorie'],['Apply for council registration online, upload your ID','Demande d’enregistrement en ligne'],['Pay the registration fee by mobile money: 3,000 FCFA (demo)','Payer 3 000 FCFA (démo)'],['Display your QR certificate in the shop','Afficher le certificat QR'],['Pay small-operator tax each quarter; you get reminders','Payer l’impôt chaque trimestre']]],
+    food: [['Street food','Restauration de rue'], [['Check your tax category','Vérifier votre catégorie'],['Get a hygiene check booking [to be confirmed]','Contrôle d’hygiène [à confirmer]'],['Register with the council online','Enregistrement en ligne'],['Pay stall or space fee monthly','Droit de place mensuel'],['Keep receipts on your phone','Garder les reçus']]],
+    hair: [['Hairdressing salon','Salon de coiffure'], [['Check your tax category','Vérifier votre catégorie'],['Register with the council online','Enregistrement en ligne'],['Optional: free bookkeeping training at the council','Formation gratuite en comptabilité'],['Pay quarterly tax by mobile money','Impôt trimestriel par mobile money']]],
+    moto: [['Moto-taxi','Moto-taxi'], [['Register as a rider (5,000 FCFA/year, demo)','Enregistrement (5 000 FCFA/an)'],['Buy the official jacket online (6,500 FCFA)','Chasuble en ligne (6 500 FCFA)'],['Get your digital badge','Badge numérique'],['Show the badge QR code at checks; never pay cash on the road','Montrer le QR ; jamais d’argent liquide']]]
+  };
+  function render(){
+    document.getElementById('h').textContent = L('Business, licences and riders','Entreprises, licences et moto-taxis');
+    document.getElementById('intro').textContent = L('For small operators who deal with the council. Businesses above 10 million FCFA turnover are handled by the national tax authority.','Pour les petits opérateurs. Au-delà de 10 millions FCFA, l’administration fiscale nationale est compétente.');
+    document.getElementById('tr1').textContent = L('Moto-taxi riders','Moto-taximen'); document.getElementById('tr2').textContent = L('Badge, jacket, fee check, report extortion','Badge, chasuble, signalement');
+    document.getElementById('tc1').textContent = L('Which tax applies to me?','Quel impôt pour moi ?'); document.getElementById('tc2').textContent = L('Three questions, 2025/2026 finance law','Trois questions');
+    document.getElementById('tl1').textContent = L('Free business training','Formations gratuites'); document.getElementById('tl2').textContent = L('Bookkeeping, digital skills, career fair','Comptabilité, numérique, salon');
+    document.getElementById('gTitle').textContent = L('Start-up guide','Guide de création');
+    document.getElementById('gL').textContent = L('Your activity','Votre activité');
+    const sel = document.getElementById('gType'), cur = sel.value || 'shop';
+    sel.innerHTML = Object.entries(GUIDES).map(([k,g]) => '<option value="' + k + '">' + g[0][fr()?1:0] + '</option>').join(''); sel.value = cur;
+    document.getElementById('gSteps').innerHTML = GUIDES[sel.value][1].map(s => '<li>' + A.esc(s[fr()?1:0]) + '</li>').join('');
+    document.getElementById('apply').textContent = sel.value === 'moto' ? L('Go to rider services','Services moto-taxi') : L('Apply for council registration · ','Demander l’enregistrement · ') + A.fmt(3000);
+    document.getElementById('rTitle').textContent = L('Renew a licence or check status','Renouveler ou vérifier une licence');
+    document.getElementById('rL').textContent = L('Operator number','Numéro d’opérateur'); document.getElementById('rBtn').textContent = L('Check','Vérifier');
+    document.getElementById('mTitle').textContent = L('Pay market or stall fees','Payer le droit de place');
+    document.getElementById('mL1').textContent = L('Market and stall','Marché et stand'); document.getElementById('mL2').textContent = L('Months','Mois');
+    document.getElementById('mTotal').innerHTML = L('Total: ','Total : ') + '<strong>' + A.fmt(2500 * +document.getElementById('months').value) + '</strong>';
+    document.getElementById('mPay').textContent = L('Pay by mobile money','Payer'); document.getElementById('remL').textContent = L('Send me an SMS reminder before each payment is due','Rappel SMS avant chaque échéance');
+    document.getElementById('dTitle').textContent = L('Dispute a charge or assessment','Contester un montant');
+    document.getElementById('dIntro').textContent = L('If you think you were charged the wrong amount, tell us. An officer reviews it and replies within 10 working days (demo).','Un agent examine et répond sous 10 jours ouvrables (démo).');
+    document.getElementById('dL1').textContent = L('Receipt or reference','Reçu ou référence'); document.getElementById('dL2').textContent = L('What is wrong','Le problème'); document.getElementById('dBtn').textContent = L('Send dispute','Envoyer');
+    op();
+  }
+  function op(){
+    const o = D.operators.find(x => x.id.toUpperCase() === document.getElementById('op').value.trim().toUpperCase()), out = document.getElementById('opOut');
+    if (!o) { out.innerHTML = '<div class="notice n-risk">' + L('Operator not found.','Introuvable.') + '</div>'; return; }
+    const ok = o.paid >= A.TODAY;
+    out.innerHTML = '<div class="card flat stack" style="background:var(--tint)"><strong>' + A.esc(o.name) + '</strong><span class="small">' + o.type + ' · ' + L('Category ','Catégorie ') + o.cat + ' · ' + o.zone + '</span><span class="badge ' + (ok?'b-ok':'b-risk') + '" style="align-self:flex-start">' + (ok ? L('Paid until ','Payé jusqu’au ') : L('Expired on ','Expiré le ')) + A.dateFmt(o.paid) + '</span>' + (ok ? '' : '<button class="btn sm" id="renew">' + L('Renew now · ','Renouveler · ') + A.fmt(o.cat === 'A' ? 15000 : 37500) + '</button>') + '</div>';
+    const r = document.getElementById('renew'); if (r) r.onclick = () => pay('Licence renewal', o.cat === 'A' ? 15000 : 37500, o.name);
+  }
+  function pay(type, fee, name){
+    const r = A.addRequest({ id: A.newId('BL'), council: A.state.council, type, name, parent: '', phone: '6XX XX XX 21', source: 'Citizen app', channel: 'App', lang: A.state.lang, created: A.TODAY, status: 'Awaiting payment', fee, paid: false, mine: true, ai: { level: 'ok', text: 'Standard fee.' }, history: [A.h(A.TODAY, type + ' started in the app')] });
+    location.href = 'pay.html?id=' + r.id;
+  }
+  document.getElementById('gType').onchange = render;
+  document.getElementById('months').onchange = render;
+  document.getElementById('rf').addEventListener('submit', e => { e.preventDefault(); op(); });
+  document.getElementById('apply').onclick = () => { if (document.getElementById('gType').value === 'moto') { location.href = 'rider.html'; return; }
+    const r = A.addRequest({ id: A.newId('BL'), council: A.state.council, type: 'Business registration', name: 'New shop · Grace Mbua', parent: '', phone: '6XX XX XX 21', source: 'Citizen app', channel: 'App', lang: A.state.lang, created: A.TODAY, status: 'Awaiting registrar', fee: 3000, paid: false, mine: true, ai: { level: 'ok', text: 'ID attached. Category A by self-declaration.' }, history: [A.h(A.TODAY, 'Business registration submitted')] });
+    document.getElementById('applyOut').innerHTML = '<div class="notice n-ok">' + L('Application sent: ','Demande envoyée : ') + '<strong>' + r.id + '</strong>. <a href="track.html?id=' + r.id + '">' + A.t('nav.track') + '</a></div>'; };
+  document.getElementById('mPay').onclick = () => pay('Market stall fee', 2500 * +document.getElementById('months').value, document.getElementById('stall').value);
+  document.getElementById('dBtn').onclick = () => { const ref = 'CMP-2026-0' + (150 + A.state.complaints.length);
+    A.state.complaints.unshift({ ref, topic: 'Tax dispute', text: document.getElementById('dText').value + ' (' + document.getElementById('dRef').value + ')', date: A.TODAY, status: 'New', service: 'Business and tax', reply: '' }); A.save();
+    document.getElementById('dOut').innerHTML = '<div class="notice n-ok">' + L('Dispute received: ','Contestation reçue : ') + '<strong>' + ref + '</strong>. <a href="complaints.html">' + L('Follow it','Suivre') + '</a></div>'; };
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Registrar work queue</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+</head>
+<body data-portal="staff" data-page="staff">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:18px">
+  <div class="row between">
+    <div class="stack" style="gap:2px"><h1 style="font-size:24px" id="h"></h1><span class="small muted" id="who"></span></div>
+    <div class="row" role="tablist"><button class="btn" data-tab="queue" id="tq"></button><button class="btn ghost" data-tab="digit" id="td"></button><button class="btn ghost" data-tab="search">Records and other councils</button><button class="btn ghost" data-tab="second">Secondary centres</button><button class="btn ghost" data-tab="complaints">Complaints</button><button class="btn ghost" data-tab="help">AI help desk</button></div>
+  </div>
+
+  <section id="tab-queue" class="stack">
+    <div class="grid g4" id="kpis"></div>
+    <div class="card row">
+      <label class="f" style="flex:2 1 220px"><span id="ls"></span><input type="text" id="search"></label>
+      <label class="f" style="flex:1 1 160px"><span id="lf"></span><select id="filter"></select></label>
+    </div>
+    <div class="split">
+      <div class="main card" style="padding:0"><div class="scroll-x"><table id="tbl"></table></div></div>
+      <aside class="side card stack" id="detail"></aside>
+    </div>
+  </section>
+
+  <section id="tab-digit" class="stack" hidden>
+    <div class="notice n-info" id="dIntro"></div>
+    <div class="split">
+      <div class="main card stack">
+        <div class="row between"><strong id="pageLbl">Register 2009 · Volume 3 · Page 104</strong><span class="badge b-info" id="progress"></span></div>
+        <svg viewBox="0 0 600 330" role="img" aria-label="Scanned handwritten register page (illustration)" style="width:100%;background:#F3EBD8;border-radius:8px">
+          <g stroke="#8A7A5A" stroke-width="1">
+            <line x1="20" y1="50" x2="580" y2="50"/><line x1="20" y1="130" x2="580" y2="130"/><line x1="20" y1="210" x2="580" y2="210"/><line x1="20" y1="290" x2="580" y2="290"/><line x1="90" y1="20" x2="90" y2="310"/>
+          </g>
+          <g fill="none" stroke="#2C3E66" stroke-width="2" stroke-linecap="round">
+            <path d="M35 95 q10-20 20 0 t20 0"/><path d="M110 80 q15-15 30 0 t30 0 t30 0 t30 0"/><path d="M110 105 q12-12 24 0 t24 0 t24 0"/><path d="M330 85 q14-14 28 0 t28 0 t28 0"/>
+            <path d="M35 175 q10-20 20 0 t20 0"/><path d="M110 160 q15-15 30 0 t30 0 t30 0"/><path d="M110 185 q12-12 24 0 t24 0 t24 0 t24 0"/><path d="M330 165 q14-14 28 0 t28 0"/>
+            <path d="M35 255 q10-20 20 0 t20 0"/><path d="M110 240 q15-15 30 0 t30 0 t30 0 t30 0 t30 0"/><path d="M110 265 q12-12 24 0 t24 0"/><path d="M330 245 q14-14 28 0 t28 0 t28 0"/>
+          </g>
+          <text x="22" y="38" font-size="13" fill="#5F5444">No.</text><text x="100" y="38" font-size="13" fill="#5F5444">Name · Date · Parents (handwritten)</text>
+        </svg>
+      </div>
+      <div class="side card stack" id="entries"></div>
+    </div>
+  </section>
+  <section id="tab-search" class="stack" hidden>
+    <div class="card row"><label class="f" style="flex:2 1 240px">Search digitised records (name, year, parents)<input type="text" id="rq" value="Ngole 2009"></label><label class="f" style="flex:1 1 160px">Where<select id="rwhere"><option value="here">This council</option><option value="all">All councils on the platform</option></select></label><button class="btn" style="align-self:flex-end" id="rgo">Search</button></div>
+    <div class="card stack" id="rres"></div>
+    <div class="card stack"><h2>Requests exchanged with other councils</h2><div class="scroll-x"><table id="xch"></table></div></div>
+    <div class="card row between"><div class="stack" style="gap:2px"><strong>Monthly transmission to BUNEC</strong><span class="small muted">Records signed this month, in the national format</span></div><div class="row"><button class="btn ghost" id="bdraft">Draft monthly report with AI</button><button class="btn" id="bunec">Send 214 records to BUNEC</button></div></div>
+    <div id="bout"></div>
+  </section>
+  <section id="tab-second" class="card stack" hidden><h2>Declarations from secondary civil status centres</h2><p class="small muted" style="margin:0">Village and neighbourhood centres submit declarations here instead of carrying paper to the council.</p><div class="scroll-x"><table id="sec"></table></div></section>
+  <section id="tab-complaints" class="card stack" hidden><h2>Citizen complaints to answer</h2><div class="scroll-x"><table id="cmplist"></table></div></section>
+  <section id="tab-help" class="split" hidden>
+    <div class="main card stack"><h2>Ask about procedures</h2><p class="small muted" style="margin:0">Answers come from the council's internal procedures manual (demo).</p>
+      <div class="chips" id="hq"></div><div id="ha" class="stack"></div></div>
+    <div class="side card stack"><h2>Draft a letter or reply</h2><label class="f">Purpose<select id="lt"><option>Reply to a complaint about waiting time</option><option>Ask a citizen for a missing document</option><option>Confirm a marriage date</option><option>Translate a birth certificate (English ⇄ French)</option></select></label><label class="f">Language<select id="ll"><option>English</option><option>Français</option><option>Both</option></select></label><button class="btn sm" id="ld" style="align-self:flex-start">Draft with AI</button><div id="lout"></div></div>
+  </section>
+</main>
+<script>
+(function(){
+  const A = App; let sel = A.param('id'); const fr = () => A.state.lang === 'fr'; const L = (e,f) => fr() ? f : e;
+  const tabs = document.querySelectorAll('[data-tab]');
+  tabs.forEach(b => b.onclick = () => { tabs.forEach(x => x.classList.toggle('ghost', x !== b)); ['queue','digit','search','second','complaints','help'].forEach(t => document.getElementById('tab-' + t).hidden = b.dataset.tab !== t); extra(); });
+  const ENTRIES = [
+    { no: 410, name: 'Mbella Ndive Joseph', date: '2009-03-02', mother: 'Ndive Eposi', conf: 96, ok: false },
+    { no: 411, name: 'Ewane Grace', date: '2009-03-04', mother: 'Ewane Rose', conf: 91, ok: false },
+    { no: 412, name: 'Ngole Marie', date: '2009-03-05', mother: 'Ngole Esther', conf: 72, ok: false }
+  ];
+  function texts(){
+    document.getElementById('h').textContent = L('Civil status · registrar','État civil · officier');
+    document.getElementById('who').textContent = L('Signed in: Registrar Mbua (demo) · ' + A.council().name, 'Connecté : officier Mbua (démo) · ' + A.council().name);
+    document.getElementById('tq').textContent = L('Work queue','File de travail'); document.getElementById('td').textContent = L('Register digitisation','Numérisation des registres');
+    document.getElementById('ls').textContent = L('Search name or request number','Rechercher un nom ou un numéro');
+    document.getElementById('lf').textContent = L('Show','Afficher');
+    const f = document.getElementById('filter'), cur = f.value || 'open';
+    f.innerHTML = [['open',L('Needs my action','À traiter')],['all',L('All requests','Toutes')],['risk',L('AI flagged a problem','Problème signalé')],['Late birth',L('Late registrations','Déclarations tardives')]].map(o => '<option value="' + o[0] + '">' + o[1] + '</option>').join(''); f.value = cur;
+    document.getElementById('dIntro').textContent = L('The AI reads each scanned register page and proposes typed entries. A clerk confirms or corrects each one; a second person checks a sample.','L’IA lit chaque page scannée et propose une saisie. Un agent confirme ou corrige chaque entrée ; une seconde personne contrôle un échantillon.');
+  }
+  function render(){
+    const all = A.requests(), f = document.getElementById('filter').value, q = document.getElementById('search').value.toLowerCase();
+    const open = all.filter(r => r.status === 'Awaiting registrar');
+    const k = [[L('Waiting for review','En attente'), open.length],[L('AI flagged','Signalés par l’IA'), open.filter(r => r.ai.level !== 'ok').length],[L('Late registrations','Tardives'), all.filter(r => r.type === 'Late birth' && r.status === 'Awaiting registrar').length],[L('Signed today','Signés aujourd’hui'), 9 + all.filter(r => r.signedToday).length]];
+    document.getElementById('kpis').innerHTML = k.map((x,i) => '<div class="kpi"><div class="v" style="' + (i===1&&x[1]?'color:var(--red)':'') + '">' + x[1] + '</div><div class="l">' + x[0] + '</div></div>').join('');
+    let list = all.filter(r => f === 'all' ? true : f === 'open' ? r.status === 'Awaiting registrar' : f === 'risk' ? r.ai.level !== 'ok' : r.type === f);
+    if (q) list = list.filter(r => (r.id + ' ' + r.name + ' ' + r.parent).toLowerCase().includes(q));
+    if (!sel || !list.find(r => r.id === sel)) sel = (A.findReq(sel) ? sel : (list[0] || {}).id);
+    document.getElementById('tbl').innerHTML = '<thead><tr><th>' + L('Request','Demande') + '</th><th>Type</th><th>' + L('Channel','Canal') + '</th><th>' + L('AI pre-check','Pré-contrôle IA') + '</th><th>Status</th><th>' + L('Received','Reçu') + '</th></tr></thead><tbody>' +
+      (list.length ? list.map(r => '<tr class="click ' + (r.id === sel ? 'sel' : '') + '" data-id="' + r.id + '"><td><strong>' + A.esc(r.name) + '</strong><div class="small muted">' + r.id + '</div></td><td>' + r.type + '</td><td class="small">' + A.esc(r.channel) + '</td><td>' + A.aiBadge(r.ai) + '</td><td>' + A.badge(r.status) + '</td><td class="small">' + A.dateFmt(r.created) + '</td></tr>').join('') : '<tr><td colspan="6" class="muted">' + L('Nothing to show.','Rien à afficher.') + '</td></tr>') + '</tbody>';
+    document.querySelectorAll('#tbl tr.click').forEach(tr => tr.onclick = () => { sel = tr.dataset.id; render(); });
+    detail();
+  }
+  function detail(){
+    const d = document.getElementById('detail'), r = A.findReq(sel);
+    if (!r) { d.innerHTML = '<p class="muted">' + L('Select a request.','Sélectionnez une demande.') + '</p>'; return; }
+    const lv = { ok: 'n-ok', warn: 'n-warn', risk: 'n-risk' }[r.ai.level];
+    d.innerHTML = '<span class="small muted">' + r.id + ' · ' + r.type + '</span><h2>' + A.esc(r.name) + '</h2>' +
+      '<table><tbody>' + [[L('Parent / contact','Parent / contact'), r.parent || '—'],[L('Phone','Téléphone'), r.phone],[L('Source','Source'), r.source],[L('Citizen language','Langue du citoyen'), {en:'English',fr:'Français',pcm:'Pidgin'}[r.lang]],[L('Fee','Frais'), A.fmt(r.fee) + (r.paid ? ' · ' + L('paid','payé') : '')]].map(x => '<tr><td class="muted small">' + x[0] + '</td><td class="small"><strong>' + A.esc(x[1]) + '</strong></td></tr>').join('') + '</tbody></table>' +
+      '<div class="notice ' + lv + ' stack" style="gap:4px"><strong>' + L('AI pre-check','Pré-contrôle IA') + '</strong><span>' + A.esc(r.ai.text) + '</span><span class="small">' + L('Suggestion only. You decide.','Simple suggestion. Vous décidez.') + '</span></div>' +
+      (r.ai.level === 'risk' ? '<button class="btn sm ghost" id="cmp">' + L('Compare with BC-2025-11873','Comparer avec BC-2025-11873') + '</button><div id="cmpOut"></div>' : '') +
+      '<details><summary class="small">' + L('History','Historique') + ' (' + r.history.length + ')</summary><ul class="small" style="padding-left:18px">' + r.history.map(x => '<li>' + A.dateFmt(x.date) + ' · ' + A.esc(x.text) + '</li>').join('') + '</ul></details>' +
+      (r.status === 'Awaiting registrar' ?
+        '<div class="row"><button class="btn" id="approve">' + L('Approve and sign','Approuver et signer') + '</button><button class="btn ghost" id="ret">' + L('Return to citizen','Renvoyer au citoyen') + '</button></div><div id="retBox"></div>'
+        : '<div class="notice n-info small">' + L('No action needed from you on this request.','Aucune action requise.') + '</div>') +
+      '<a class="small" href="track.html?id=' + r.id + '">' + L('See what the citizen sees','Voir la vue citoyen') + '</a>';
+    const cmp = document.getElementById('cmp'); if (cmp) cmp.onclick = () => { document.getElementById('cmpOut').innerHTML = '<table class="small"><thead><tr><th></th><th>' + r.id + '</th><th>BC-2025-11873</th></tr></thead><tbody><tr><td>Name</td><td>Paul Ekema</td><td>Paul Ekema</td></tr><tr><td>Born</td><td>2026-10-30</td><td>2025-02-14</td></tr><tr><td>Mother</td><td>Joy Ekema</td><td>Joy Ekema</td></tr></tbody></table><p class="small muted">' + L('Different birth dates: likely a second child with the same name. Check with the mother.','Dates différentes : probablement un second enfant du même nom.') + '</p>'; };
+    const ap = document.getElementById('approve'); if (ap) ap.onclick = () => {
+      const patch = r.fee > 0 && !r.paid ? { status: 'Awaiting payment', signedToday: true } : { status: 'Ready', signedToday: true, certNo: A.certPrefix(r.council) + '-2026-' + r.id[0] + '-' + r.id.slice(-5) };
+      A.updateRequest(r.id, patch, 'Signed by the registrar'); A.toast(L('Signed. The citizen is notified by SMS in ','Signé. Le citoyen est prévenu par SMS en ') + {en:'English',fr:'French',pcm:'Pidgin'}[r.lang] + '.'); render();
+    };
+    const rt = document.getElementById('ret'); if (rt) rt.onclick = () => {
+      document.getElementById('retBox').innerHTML = '<label class="f small">' + L('What should the citizen fix? (sent in their language)','Que doit corriger le citoyen ?') + '<textarea id="why">' + (r.ai.level === 'warn' ? 'Please upload the father’s ID card, or confirm the father is not declared.' : '') + '</textarea></label><button class="btn sm" id="sendRet">' + L('Send','Envoyer') + '</button>';
+      document.getElementById('sendRet').onclick = () => { const w = document.getElementById('why').value; A.updateRequest(r.id, { status: 'Returned', ai: { level: 'warn', text: w } }, 'Returned: ' + w); A.toast(L('Returned to citizen','Renvoyé au citoyen')); render(); };
+    };
+  }
+  function digit(){
+    const done = ENTRIES.filter(e => e.ok).length;
+    document.getElementById('progress').textContent = L('Volume 3: 412 of 1,280 entries confirmed','Volume 3 : 412 / 1 280 entrées confirmées');
+    document.getElementById('entries').innerHTML = '<h3>' + L('Proposed entries','Saisies proposées') + ' (' + done + '/' + ENTRIES.length + ')</h3>' + ENTRIES.map((e,i) =>
+      '<div class="stack" style="gap:6px;border:1px solid var(--line);border-radius:12px;padding:12px">' +
+      '<div class="row between"><strong class="small">No. ' + e.no + '</strong><span class="badge ' + (e.conf > 85 ? 'b-ok' : 'b-warn') + '">' + L('AI confidence ','Confiance IA ') + e.conf + '%</span></div>' +
+      '<label class="f small">' + L('Name','Nom') + '<input type="text" value="' + A.esc(e.name) + '" data-i="' + i + '" data-k="name"' + (e.ok?' disabled':'') + '></label>' +
+      '<div class="grid g2"><label class="f small">' + L('Date','Date') + '<input type="date" value="' + e.date + '"' + (e.ok?' disabled':'') + '></label><label class="f small">' + L('Mother','Mère') + '<input type="text" value="' + A.esc(e.mother) + '"' + (e.ok?' disabled':'') + '></label></div>' +
+      (e.ok ? '<span class="badge b-ok" style="align-self:flex-start">✓ ' + L('Confirmed','Confirmé') + '</span>' : '<button class="btn sm" data-ok="' + i + '">' + L('Confirm entry','Confirmer') + '</button>') + '</div>').join('');
+    document.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => { ENTRIES[+b.dataset.ok].ok = true; digit(); });
+  }
+
+  function extra(){
+    const D = DATA;
+    document.getElementById('xch').innerHTML = '<thead><tr><th>Ref.</th><th>From / to</th><th>Record</th><th>Status</th></tr></thead><tbody>' + [['XR-2026-0012','From Commune de Douala III','Birth, Aïcha Bello\u2019s mother, 1998','Answered'],['XR-2026-0015','To Buea Council (connected system)','Marriage 2011, Fon / Akum','Waiting']].concat(A.state.exchanges).map(x => '<tr><td>' + x[0] + '</td><td>' + x[1] + '</td><td>' + x[2] + '</td><td><span class="badge ' + (x[3] === 'Answered' ? 'b-ok' : 'b-warn') + '">' + x[3] + '</span></td></tr>').join('') + '</tbody>';
+    document.getElementById('sec').innerHTML = '<thead><tr><th>Centre</th><th>Declaration</th><th>Name</th><th>Date</th><th></th></tr></thead><tbody>' + D.secondary.map((x,i) => '<tr><td>' + x.centre + '</td><td>' + x.type + '</td><td>' + x.name + '</td><td>' + A.dateFmt(x.date) + '</td><td><button class="btn sm" data-sec="' + i + '">Move to work queue</button></td></tr>').join('') + '</tbody>';
+    document.querySelectorAll('[data-sec]').forEach(b => b.onclick = () => { const x = D.secondary[+b.dataset.sec]; const r = A.addRequest({ id: A.newId(x.type.startsWith('Birth') ? 'BC' : 'DC'), council: A.state.council, type: x.type.startsWith('Birth') ? 'Birth' : 'Death', name: x.name, parent: '', phone: '—', source: x.centre, channel: 'Secondary centre', lang: 'en', created: x.date, status: 'Awaiting registrar', fee: 0, paid: false, ai: { level: 'ok', text: 'Submitted by secondary centre officer.' }, history: [A.h(x.date, 'Declared at ' + x.centre)] }); b.outerHTML = '<span class="badge b-ok">In queue as ' + r.id + '</span>'; });
+    const C = A.state.complaints.concat(D.complaintsSeed);
+    document.getElementById('cmplist').innerHTML = '<thead><tr><th>Ref.</th><th>Topic</th><th>Message</th><th>Status</th><th>Reply</th></tr></thead><tbody>' + C.map((c,i) => '<tr><td>' + c.ref + '</td><td>' + A.esc(c.topic) + '</td><td class="small">' + A.esc(c.text) + '</td><td><span class="badge ' + (c.status === 'Answered' ? 'b-ok' : 'b-warn') + '">' + c.status + '</span></td><td>' + (c.reply ? '<span class="small">' + A.esc(c.reply) + '</span>' : '<button class="btn sm" data-cr="' + c.ref + '">Reply (AI draft)</button>') + '</td></tr>').join('') + '</tbody>';
+    document.querySelectorAll('[data-cr]').forEach(b => b.onclick = () => { const c = A.state.complaints.find(x => x.ref === b.dataset.cr); if (c) { c.reply = 'Thank you for reporting this. The matter has been passed to the ' + c.service + ' service and you will be updated within 10 working days.'; c.status = 'Answered'; A.save(); } A.toast('Reply drafted by AI, reviewed and sent'); extra(); });
+    const HQ = [['Father is absent at the declaration','The mother can declare alone. The father\u2019s name is recorded only with his recognition or as the law provides [confirm with the internal manual].'],['Health centre note has a different spelling','Ask the parent to confirm the correct spelling in writing and attach the note; record the spelling confirmed by the parent.'],['A citizen asks for a copy for someone else','Copies can be issued to the person, their parents, spouse or a person with written authorisation [confirm].']];
+    document.getElementById('hq').innerHTML = HQ.map((q,i) => '<button class="chip" data-hq="' + i + '">' + q[0] + '</button>').join('');
+    document.querySelectorAll('[data-hq]').forEach(b => b.onclick = () => { document.getElementById('ha').innerHTML = '<div class="notice n-info"><strong>' + HQ[+b.dataset.hq][0] + '</strong><br>' + HQ[+b.dataset.hq][1] + '<br><span class="small">Source: Civil status procedures manual, section 4 (demo)</span></div>'; });
+  }
+  document.getElementById('rgo').onclick = () => { const all = document.getElementById('rwhere').value === 'all';
+    document.getElementById('rres').innerHTML = '<h2>Results</h2><table><thead><tr><th>Record</th><th>Council</th><th>Details</th><th></th></tr></thead><tbody><tr><td>Register 2009 · vol. 3 · no. 412</td><td>Limbe II</td><td>Ngole Marie, born 5 Mar 2009, mother Ngole Esther</td><td><span class="badge b-ok">Digitised</span></td></tr>' + (all ? '<tr><td>Register 2009 · no. 1188</td><td>Buea Council (connected system)</td><td>Ngole Marc, born 2009</td><td><button class="btn sm" id="reqx">Request copy from Buea</button></td></tr>' : '') + '</tbody></table>';
+    const rx = document.getElementById('reqx'); if (rx) rx.onclick = () => { A.state.exchanges.push(['XR-2026-00' + (16 + A.state.exchanges.length), 'To Buea Council (connected system)', 'Birth 2009, Ngole Marc', 'Waiting']); A.save(); A.toast('Request sent to Buea Council'); extra(); }; };
+  document.getElementById('bdraft').onclick = () => { document.getElementById('bout').innerHTML = '<div class="card stack"><strong>Monthly report to BUNEC · November 2026 (AI draft)</strong><table><thead><tr><th></th><th>This month</th><th>October</th></tr></thead><tbody><tr><td>Births registered</td><td>41</td><td>47</td></tr><tr><td>of which within the legal period</td><td>34 (83%)</td><td>37 (79%)</td></tr><tr><td>Late registrations</td><td>7</td><td>10</td></tr><tr><td>Marriages</td><td>6</td><td>9</td></tr><tr><td>Deaths</td><td>8</td><td>12</td></tr></tbody></table><div class="notice n-warn small"><strong>Worth checking before sending:</strong> 2 birth records still awaiting signature are not included; 1 death notified by Seaside Maternity has no declaration from the family yet; late registrations fell by 30% after the health centre reminders started.</div><span class="small muted">AI draft in the national format. The registrar checks and sends; nothing is sent automatically.</span></div>'; };
+  document.getElementById('bunec').onclick = () => A.toast('214 records sent to BUNEC in the national format (demo). Receipt logged.');
+  document.getElementById('ld').onclick = () => { if (document.getElementById('lt').value.startsWith('Translate')) { document.getElementById('lout').innerHTML = '<div class="card flat" style="background:var(--tint);white-space:pre-line;font-size:13px">TRANSLATION (draft) of birth certificate LMB2-2026-B-01482\n\nActe de naissance n° LMB2-2026-B-01482\nNom : Esther Nalova Mbua\nNée le : 3 novembre 2026 à Limbe\nMère : Grace Ewane Mbua\nCentre d’état civil : Commune de Limbe II\n\n[Mention de certification à compléter par l’officier d’état civil]</div><span class="small muted">AI draft translation. A council officer must check it against the original and certify it; it is not valid until certified.</span>'; return; } const l = document.getElementById('ll').value, en = 'Dear Sir or Madam,\n\nThank you for contacting Limbe II Council. ' + ({ 'Reply to a complaint about waiting time': 'We are sorry for the long wait. You can now book an appointment in the app or by USSD to avoid queues.', 'Ask a citizen for a missing document': 'To complete your request, please upload a photo of the father\u2019s ID card in the app, or reply to this message.', 'Confirm a marriage date': 'Your marriage ceremony is confirmed for 19 December 2026 at 10:00 at the council hall.' }[document.getElementById('lt').value]) + '\n\nCivil status service', fr = 'Madame, Monsieur,\n\nMerci d\u2019avoir contacté la commune. [Version française générée et à relire]\n\nService d\u2019état civil';
+    document.getElementById('lout').innerHTML = '<div class="card flat" style="background:var(--tint);white-space:pre-line;font-size:13px">' + (l === 'Français' ? fr : l === 'Both' ? en + '\n\n———\n\n' + fr : en) + '</div><span class="small muted">AI draft: review before sending.</span>'; };
+  document.getElementById('filter').addEventListener('change', render);
+  document.getElementById('search').addEventListener('input', render);
+  texts(); render(); digit(); extra();
+  document.addEventListener('langchange', () => { texts(); render(); digit(); });
+})();
+</script>
+</body>
+</html>

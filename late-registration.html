@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Late birth registration</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="citizen" data-page="late">
+<div id="shell"></div>
+<main class="wrap" style="max-width:760px">
+  <div class="card stack" style="gap:18px">
+    <div class="stack" style="gap:6px">
+      <h1 style="font-size:24px" data-i18n="s.late"></h1>
+      <span class="small muted" id="stepLabel"></span>
+      <div class="steps" id="steps"><div></div><div></div><div></div><div></div></div>
+    </div>
+
+    <section id="s1" class="stack">
+      <div class="notice n-info" id="s1note"></div>
+      <label class="f"><span id="l_child"></span><input type="text" id="child" value="Junior Eko"></label>
+      <div class="grid g2">
+        <label class="f"><span id="l_dob"></span><input type="date" id="dob" value="2019-05-14"></label>
+        <label class="f"><span id="l_place"></span><select id="place"><option value="hospital">Hospital or health centre</option><option value="home">At home</option></select></label>
+      </div>
+      <div class="grid g2">
+        <label class="f"><span id="l_parent"></span><input type="text" id="parent" value="Bih Eko"></label>
+        <label class="f"><span id="l_phone"></span><input type="tel" id="phone" value="6XX XX XX 40"></label>
+      </div>
+      <label class="f"><span id="l_lang"></span><select id="plang"><option value="en">English</option><option value="fr">Français</option><option value="pcm" selected>Pidgin (voice messages)</option></select></label>
+    </section>
+
+    <section id="s2" class="stack" hidden>
+      <div class="notice n-warn" id="ageNote"></div>
+      <div id="docs" class="stack"></div>
+      <p class="small muted" id="docHelp"></p>
+    </section>
+
+    <section id="s3" class="stack" hidden>
+      <p style="margin:0" id="s3text"></p>
+      <div class="grid g3" id="slots"></div>
+    </section>
+
+    <section id="s4" class="stack" hidden>
+      <div id="summary" class="stack"></div>
+      <label class="row small"><input type="checkbox" id="consent" checked style="width:20px;height:20px"> <span id="consentText"></span></label>
+    </section>
+
+    <section id="done" class="stack" hidden></section>
+
+    <div class="row between" id="navBtns">
+      <button class="btn ghost" id="back" data-i18n="common.back"></button>
+      <button class="btn" id="next" data-i18n="common.continue"></button>
+    </div>
+    <a href="assistant.html?q=late registration" class="small" style="align-self:center" id="askLink"></a>
+  </div>
+</main>
+<script>
+(function(){
+  const A = App; let step = 1; const docsState = {}; let slot = null;
+  const fr = () => A.state.lang === 'fr';
+  const DOCS = () => {
+    const hosp = document.getElementById('place').value === 'hospital';
+    return [
+      hosp ? ['note', fr()?'Certificat d’accouchement de l’hôpital':'Hospital birth note', true] : ['witness', fr()?'Pièces d’identité de deux témoins':'ID cards of two witnesses', true],
+      ['mother', fr()?'CNI de la mère':'Mother’s ID card', true],
+      ['father', fr()?'CNI du père (si déclaré)':'Father’s ID card (if declared)', false],
+      ['other', fr()?'[Autre pièce confirmée par la commune]':'[Other document confirmed by the council]', false]
+    ];
+  };
+  const age = () => { const d = new Date(document.getElementById('dob').value), t = new Date(A.TODAY); let a = t.getFullYear() - d.getFullYear(); if (t < new Date(t.getFullYear(), d.getMonth(), d.getDate())) a--; return a; };
+  function texts(){
+    const F = fr();
+    document.getElementById('s1note').textContent = F ? 'Répondez à quelques questions. L’assistant vous indiquera exactement les pièces nécessaires.' : 'Answer a few questions and we’ll tell you exactly what is needed for your situation.';
+    [['l_child','Child’s full name','Nom complet de l’enfant'],['l_dob','Date of birth','Date de naissance'],['l_place','Where was the child born?','Lieu de naissance'],['l_parent','Your name (parent)','Votre nom (parent)'],['l_phone','Phone for updates','Téléphone pour le suivi'],['l_lang','Language for messages','Langue des messages']].forEach(x => document.getElementById(x[0]).textContent = F ? x[2] : x[1]);
+    document.getElementById('askLink').textContent = F ? 'Pas sûr ? Demandez à l’assistant' : 'Not sure? Ask the assistant';
+    document.getElementById('consentText').textContent = F ? 'Je confirme que ces informations sont exactes.' : 'I confirm the information is correct to the best of my knowledge.';
+  }
+  function show(){
+    ['s1','s2','s3','s4'].forEach((id,i) => document.getElementById(id).hidden = (i+1 !== step));
+    document.querySelectorAll('#steps div').forEach((d,i) => d.classList.toggle('on', i < step));
+    const names = fr() ? ['Votre situation','Pièces','Rendez-vous','Vérifier et envoyer'] : ['Your situation','Documents','Appointment','Check and submit'];
+    document.getElementById('stepLabel').textContent = (fr()?'Étape ':'Step ') + step + (fr()?' sur 4 · ':' of 4 · ') + names[step-1];
+    document.getElementById('back').style.visibility = step === 1 ? 'hidden' : 'visible';
+    document.getElementById('next').textContent = step === 4 ? (fr()?'Envoyer la demande':'Submit request') : A.t('common.continue');
+    if (step === 2) renderDocs(); if (step === 3) renderSlots(); if (step === 4) renderSummary();
+  }
+  function renderDocs(){
+    const a = age();
+    document.getElementById('ageNote').textContent = fr() ? 'L’enfant a ' + a + ' ans : la déclaration est tardive. Frais officiels : ' + A.fmt(5000) + ' (démo). [Un jugement supplétif peut être nécessaire : à confirmer par la commune.]' : 'The child is ' + a + ' years old, so this is a late registration. Official fee: ' + A.fmt(5000) + ' (demo). [A court judgment may be required: to be confirmed by the council.]';
+    document.getElementById('docs').innerHTML = DOCS().map(d => {
+      const st = docsState[d[0]];
+      return '<div class="row between" style="border:1px solid var(--line);border-radius:12px;padding:12px 14px">' +
+        '<div class="stack" style="gap:2px"><strong style="font-size:14px">' + A.esc(d[1]) + (d[2] ? '' : ' <span class="muted small">(' + (fr()?'si disponible':'if available') + ')</span>') + '</strong>' +
+        '<span class="small ' + (st ? '' : 'muted') + '" style="' + (st ? 'color:var(--green-ink)' : '') + '">' + (st ? '✓ ' + st : (fr()?'Pas encore ajouté':'Not added yet')) + '</span></div>' +
+        '<label class="btn sm ghost">' + (st ? (fr()?'Remplacer':'Replace') : (fr()?'Photo':'Take photo')) + '<input type="file" accept="image/*" data-doc="' + d[0] + '" class="sr"></label></div>';
+    }).join('');
+    document.querySelectorAll('#docs input[type=file]').forEach(inp => inp.addEventListener('change', () => {
+      const k = inp.dataset.doc; docsState[k] = fr() ? 'Analyse en cours…' : 'Reading photo…'; renderDocs();
+      setTimeout(() => { docsState[k] = k === 'note' ? (fr()?'Lu par l’assistant : nom et date trouvés':'Read by the assistant: name and date of birth found') : (fr()?'Ajouté et lisible':'Added and readable'); renderDocs(); }, 900);
+    }));
+    document.getElementById('docHelp').textContent = fr() ? 'Démo : choisissez n’importe quelle image ; l’assistant simule la lecture du document.' : 'Demo: choose any image; the assistant simulates reading the document.';
+  }
+  function renderSlots(){
+    document.getElementById('s3text').textContent = fr() ? 'Choisissez un créneau pour signer au service d’état civil de ' + A.council().name + '.' : 'Choose a time to sign in person at ' + A.council().name + ' civil status office. No queue.';
+    const S = ['Mon 16 Nov · 09:00','Mon 16 Nov · 11:30','Tue 17 Nov · 08:30','Wed 18 Nov · 10:00','Thu 19 Nov · 13:00','Fri 20 Nov · 09:30'];
+    document.getElementById('slots').innerHTML = S.map(s => '<button type="button" class="btn ' + (s === slot ? '' : 'ghost') + '" data-s="' + s + '">' + s + '</button>').join('');
+    document.querySelectorAll('#slots button').forEach(b => b.onclick = () => { slot = b.dataset.s; renderSlots(); });
+  }
+  function renderSummary(){
+    const missing = DOCS().filter(d => d[2] && !docsState[d[0]]).map(d => d[1]);
+    document.getElementById('summary').innerHTML =
+      '<div class="card flat" style="background:var(--tint)"><table><tbody>' +
+      [[fr()?'Enfant':'Child', document.getElementById('child').value],[fr()?'Né(e) le':'Born', A.dateFmt(document.getElementById('dob').value) + ' (' + age() + (fr()?' ans':' years') + ')'],[fr()?'Parent':'Parent', document.getElementById('parent').value],[fr()?'Pièces':'Documents', Object.keys(docsState).length + ' ' + (fr()?'ajoutée(s)':'added')],[fr()?'Rendez-vous':'Appointment', slot || (fr()?'Non choisi':'Not chosen')],[fr()?'Frais':'Fee', A.fmt(5000) + ' (demo)']].map(r => '<tr><td class="muted">' + r[0] + '</td><td><strong>' + A.esc(r[1]) + '</strong></td></tr>').join('') + '</tbody></table></div>' +
+      (missing.length ? '<div class="notice n-warn">' + (fr()?'Pièces manquantes : ':'Missing: ') + A.esc(missing.join(', ')) + (fr()?'. Vous pouvez envoyer et les ajouter plus tard.':'. You can submit now and add them later; the registrar will see what is missing.') + '</div>' : '<div class="notice n-ok">' + (fr()?'Tout est prêt.':'Everything needed is attached.') + '</div>');
+  }
+  function submit(){
+    const missing = DOCS().filter(d => d[2] && !docsState[d[0]]).map(d => d[1]);
+    const r = A.addRequest({ id: A.newId('LR'), council: A.state.council, type: 'Late birth', name: document.getElementById('child').value, parent: document.getElementById('parent').value, phone: document.getElementById('phone').value, source: 'Citizen app', channel: 'App', lang: document.getElementById('plang').value, created: A.TODAY, status: 'Awaiting registrar', fee: 5000, paid: false, mine: true,
+      ai: missing.length ? { level: 'warn', text: 'Child is ' + age() + ' years old. Missing: ' + missing.join(', ') + '.' } : { level: 'ok', text: 'Child is ' + age() + ' years old. All required documents attached and readable.' },
+      history: [A.h(A.TODAY, 'Late registration submitted in the app'), A.h(A.TODAY, Object.keys(docsState).length + ' document(s) uploaded' + (slot ? '; appointment ' + slot : ''))] });
+    document.getElementById('s4').hidden = true; document.getElementById('navBtns').hidden = true;
+    const d = document.getElementById('done'); d.hidden = false;
+    d.innerHTML = '<div class="notice n-ok"><strong>' + (fr()?'Demande envoyée':'Request submitted') + ' · ' + r.id + '</strong></div><p style="margin:0">' + (fr()?'Vous recevrez les mises à jour par SMS. L’officier d’état civil voit déjà votre demande.':'You will get updates by SMS in your chosen language. The registrar can already see your request in their work queue.') + '</p><div class="row"><a class="btn" href="track.html?id=' + r.id + '">' + A.t('nav.track') + '</a><a class="btn ghost" href="staff.html?id=' + r.id + '">' + (fr()?'Voir côté officier (démo)':'See it as the registrar (demo)') + '</a></div>';
+  }
+  document.getElementById('next').onclick = () => { if (step < 4) { step++; show(); } else { if (!document.getElementById('consent').checked) { A.toast(fr()?'Veuillez confirmer.':'Please tick the confirmation box.'); return; } submit(); } };
+  document.getElementById('back').onclick = () => { if (step > 1) { step--; show(); } };
+  texts(); show(); document.addEventListener('langchange', () => { texts(); show(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Council services – Home</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="citizen" data-page="home">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:24px">
+  <section class="hero">
+    <h1 data-i18n="home.hello"></h1>
+    <p data-i18n="home.sub"></p>
+    <form class="ask" action="assistant.html" method="get">
+      <label class="sr" for="q">Your question</label>
+      <input id="q" name="q" type="text" data-i18n-ph="home.askph" style="border-radius:12px">
+      <a class="btn gold" href="assistant.html?voice=1" aria-label="Speak your question">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      </a>
+      <button class="btn ghost" type="submit" data-i18n="home.ask"></button>
+    </form>
+    <div class="chips" id="quick"></div>
+  </section>
+
+  <section class="stack">
+    <h2 data-i18n="home.services"></h2>
+    <div class="grid g4" id="tiles"></div>
+  </section>
+
+  <section class="grid g2">
+    <div class="card stack">
+      <div class="row between"><h2 data-i18n="home.myreq"></h2><a href="track.html" class="small" data-i18n="nav.track"></a></div>
+      <div id="myreq" class="stack"></div>
+      <p class="small muted" id="myreqNote"></p>
+    </div>
+    <div class="stack">
+      <div class="card stack" style="background:var(--red-soft);border-color:#F7C1C1">
+        <h3 style="color:var(--red-ink)" id="exTitle"></h3>
+        <p style="margin:0;color:#501313" id="exText"></p>
+        <div class="row"><a class="btn sm danger" href="rider.html#report" id="exBtn"></a><a class="btn sm ghost" href="services.html" data-i18n="nav.services"></a></div>
+      </div>
+      <div class="card stack">
+        <h3 id="phTitle"></h3>
+        <p class="muted" style="margin:0" id="phText"></p>
+        <div class="row"><a class="btn sm ghost" href="ussd.html">USSD *123*45#</a></div>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+(function(){
+  const A = App;
+  const ic = p => '<span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' + p + '</svg></span>';
+  const TILES = [
+    ['s.birth','assistant.html?q=How do I register my baby','<circle cx="12" cy="8" r="4"/><path d="M6 21v-1a6 6 0 0 1 12 0v1"/>', ['Free within the legal period','Gratuit dans le délai légal']],
+    ['s.late','late-registration.html','<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', ['Guided step by step','Guidé pas à pas']],
+    ['s.copy','find.html','<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>', ['No need to travel back','Sans vous déplacer']],
+    ['s.marriage','apply.html?s=marriage','<circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/>', ['Notice and ceremony booking','Publication et réservation']],
+    ['s.death','apply.html?s=death','<path d="M7 3h10v18H7zM10 8h4M10 12h4"/>', ['Declaration and certificate','Déclaration et acte']],
+    ['s.rider','rider.html','<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M9 17h6l-3-7h4M6 17l3-6h3"/>', ['Badge, jacket, fee check','Badge, chasuble, tarifs']],
+    ['s.business','business.html','<path d="M4 9h16v11H4zM8 9V5h8v4"/>', ['Licences and small-operator tax','Licences et impôt des petits opérateurs']],
+    ['s.learn','learn.html','<path d="M3 8l9-4 9 4-9 4z"/><path d="M7 10v5c3 2 7 2 10 0v-5"/>', ['Courses, videos, training, jobs','Cours, vidéos, formations, emplois']],
+    ['s.complain','complaints.html','<path d="M4 5h16v11H8l-4 4z"/>', ['Report a problem, rate a service','Signaler, noter un service']],
+    ['s.verify','verify.html','<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8 12l3 3 5-6"/>', ['Scan or type the number','Scanner ou saisir le numéro']]
+  ];
+  function render(){
+    const fr = A.state.lang === 'fr';
+    document.getElementById('tiles').innerHTML = TILES.map(t => '<a class="tile" href="' + t[1] + '">' + ic(t[2]) + '<strong>' + A.t(t[0]) + '</strong><span class="small muted">' + t[3][fr?1:0] + '</span></a>').join('');
+    const Q = fr ? ['Comment déclarer une naissance ?','Combien coûte une copie ?','Horaires du service'] : ['Ma pikin no get birth certificate, wetin I go do?','How much is the rider jacket?','I lost my certificate during the crisis'];
+    document.getElementById('quick').innerHTML = Q.map(q => '<a class="chip" style="text-decoration:none;background:transparent;color:#fff;border-color:#CFE3D9" href="assistant.html?q=' + encodeURIComponent(q) + '">' + A.esc(q) + '</a>').join('');
+    const mine = A.requests().filter(r => ['BC-2026-01482','LR-2026-00199'].includes(r.id) || r.mine);
+    document.getElementById('myreq').innerHTML = mine.length ? mine.map(r => '<a href="track.html?id=' + r.id + '" style="text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;gap:10px;align-items:center"><span class="stack" style="gap:2px"><span class="small muted">' + r.id + ' · ' + A.esc(r.type) + '</span><strong>' + A.esc(r.name) + '</strong></span>' + A.badge(r.status) + '</a>').join('') : '<p class="muted">' + (fr?'Aucune demande.':'No requests yet.') + '</p>';
+    document.getElementById('myreqNote').textContent = fr ? 'Connecté en démo comme Grace Mbua (6XX XX XX 21).' : 'Signed in for the demo as Grace Mbua (6XX XX XX 21).';
+    document.getElementById('exTitle').textContent = fr ? 'Quelqu’un vous demande de l’argent ?' : 'Someone asking you for money?';
+    document.getElementById('exText').textContent = fr ? 'Les frais de la commune se paient uniquement à la commune ou par mobile money, avec un reçu QR.' : 'Council fees are paid only at the council or by mobile money, always with a QR receipt. Nobody should collect cash on the road.';
+    document.getElementById('exBtn').textContent = fr ? 'Signaler anonymement' : 'Report anonymously';
+    document.getElementById('phTitle').textContent = fr ? 'Pas de smartphone ?' : 'No smartphone?';
+    document.getElementById('phText').textContent = fr ? 'Composez *123*45# (démo) pour suivre une demande, voir les tarifs ou être rappelé par l’assistant vocal.' : 'Dial *123*45# (demo) to check a request, see fees, or get a call back from the voice assistant in English, French or Pidgin.';
+  }
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

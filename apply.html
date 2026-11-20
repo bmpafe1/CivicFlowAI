@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Apply for a civil status service</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="citizen" data-page="apply">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <div class="stack" style="gap:4px"><h1 id="h"></h1><p class="muted" style="margin:0" id="intro"></p></div>
+  <div class="grid g4" id="svc"></div>
+  <section class="card stack" id="form" style="max-width:820px"></section>
+</main>
+<script>
+(function(){
+  const A = App; const fr = () => A.state.lang === 'fr'; const L = (e,f) => fr() ? f : e;
+  const S = {
+    copy:   { pre: 'CP', type: 'Copy', fee: 2000, t: ['Certified copy of a certificate','Copie certifiée d’un acte'], d: ['Birth, marriage or death certificate held by this council','Acte de naissance, mariage ou décès'],
+              fields: [['name','Name on the certificate','Nom sur l’acte','Marie Ngole'],['year','Approximate year','Année approximative','2009'],['mother','Mother’s name (for birth)','Nom de la mère','Esther Ngole'],['kind','Certificate type','Type d’acte','Birth']], docs: [['Your ID card','Votre CNI']] },
+    remote: { pre: 'CP', type: 'Copy (remote)', fee: 3000, t: ['Lost document, from another town','Acte perdu, depuis une autre ville'], d: ['No need to travel back: we search the digitised registers','Sans vous déplacer : recherche dans les registres numérisés'],
+              fields: [['name','Name on the certificate','Nom sur l’acte','Ndive Eposi'],['year','Approximate year of birth','Année de naissance','2007'],['mother','Mother’s name','Nom de la mère','Eposi Ndive'],['where','Where you live now','Ville actuelle','Douala']], docs: [['Your ID card','Votre CNI'],['Police declaration of loss (if any)','Déclaration de perte (si disponible)']] },
+    home:   { pre: 'BC', type: 'Birth (home)', fee: 0, t: ['Declare a birth at home','Déclarer une naissance à domicile'], d: ['For babies not born in a health centre','Pour les bébés nés hors centre de santé'],
+              fields: [['name','Child’s full name','Nom de l’enfant','Peace Mokube'],['dob','Date of birth','Date de naissance','2026-11-09'],['mother','Mother’s name','Nom de la mère','Agnes Mokube'],['w1','Witness 1','Témoin 1','Paul Ewang'],['w2','Witness 2','Témoin 2','Rose Ekema']], docs: [['Mother’s ID card','CNI de la mère'],['Witnesses’ ID cards','CNI des témoins']] },
+    marriage:{ pre: 'MR', type: 'Marriage', fee: 10000, t: ['Marriage: notice and ceremony','Mariage : publication et cérémonie'], d: ['Submit documents, publish the notice, book the date','Pièces, publication et réservation'],
+              fields: [['name','Partner 1','Futur(e) époux(se) 1','Divine Akum'],['p2','Partner 2','Futur(e) époux(se) 2','Brenda Fon'],['date','Preferred ceremony date','Date souhaitée','2026-12-19'],['regime','Matrimonial regime','Régime matrimonial','To be chosen with the registrar']], docs: [['Birth certificates of both partners','Actes de naissance des deux'],['ID cards of both partners','CNI des deux'],['Medical certificates','Certificats médicaux'],['[Other document confirmed by the council]','[Autre pièce]']] },
+    death:  { pre: 'DC', type: 'Death', fee: 2000, t: ['Declare a death (family)','Déclarer un décès (famille)'], d: ['If the death was at home, or to complete a health centre notification','À domicile, ou pour compléter une déclaration du centre'],
+              fields: [['name','Full name of the deceased','Nom du défunt','Martha Enanga'],['date','Date of death','Date du décès','2026-11-11'],['place','Place','Lieu','At home, Mile 2'],['rel','Your relationship','Votre lien','Son']], docs: [['Medical certificate of death (if any)','Certificat médical'],['ID card of the deceased','CNI du défunt'],['Your ID card','Votre CNI']] },
+    burial: { pre: 'BA', type: 'Burial authorisation', fee: 3000, t: ['Burial authorisation','Permis d’inhumer'], d: ['After a death is declared; includes transfer of remains if needed','Après la déclaration du décès ; transfert de corps si nécessaire'],
+              fields: [['name','Full name of the deceased','Nom du défunt','Martha Enanga'],['date','Date of burial','Date de l’inhumation','2026-11-21'],['place','Place of burial','Lieu de l’inhumation','Family compound, Bonadikombo'],['transfer','Transfer of remains to another town?','Transfert de corps ?','No']], docs: [['Death certificate or declaration number','Acte ou numéro de déclaration de décès'],['Your ID card','Votre CNI']] },
+    correct:{ pre: 'CR', type: 'Correction', fee: 0, t: ['Correct an error on a record','Rectifier une erreur'], d: ['Spelling, date or other mistake on a certificate','Orthographe, date ou autre erreur'],
+              fields: [['name','Name on the record','Nom sur l’acte','Esther Nalova Mbua'],['record','Record number','Numéro d’acte','LMB2-2026-B-01482'],['error','What is wrong','Erreur','Mother’s name spelt "Grase"'],['right','What it should say','Correction','Grace']], docs: [['Proof of the correct information','Justificatif']] },
+    recon:  { pre: 'RS', type: 'Reconstitution', fee: 3000, t: ['Rebuild a destroyed or missing record','Reconstituer un acte détruit'], d: ['When the register entry was lost or destroyed, e.g. during the crisis','Quand le registre a été perdu ou détruit'],
+              fields: [['name','Name','Nom','Clovis Ayuk'],['year','Year of birth','Année','2004'],['parents','Parents’ names','Noms des parents','Ayuk Thomas, Ayuk Mary'],['story','What happened to the original','Que s’est-il passé','Register burned in 2018']], docs: [['Any old copy or school record','Ancienne copie ou dossier scolaire'],['Parents’ ID cards','CNI des parents'],['Witness statements','Témoignages']] }
+  };
+  let cur = A.param('s') || 'home'; if (cur === 'remote' || cur === 'copy') location.replace('find.html');
+  function tiles(){
+    document.getElementById('h').textContent = L('Civil status services','Services d’état civil');
+    document.getElementById('intro').innerHTML = L('Choose what you need. Births in health centres start automatically; for late registration use the <a href="late-registration.html">guided form</a>. Not sure? <a href="assistant.html">Ask the assistant</a>.','Choisissez votre démarche. Pour une déclaration tardive, utilisez le <a href="late-registration.html">formulaire guidé</a>.');
+    document.getElementById('svc').innerHTML = Object.entries(S).map(([k,v]) => '<button class="tile" style="text-align:left;cursor:pointer;' + (k === cur ? 'border-color:var(--green);border-width:2px' : '') + '" data-s="' + k + '"><strong>' + A.esc(v.t[fr()?1:0]) + '</strong><span class="small muted">' + A.esc(v.d[fr()?1:0]) + '</span><span class="small"><strong>' + A.fmt(v.fee) + '</strong></span></button>').join('');
+    document.querySelectorAll('[data-s]').forEach(b => b.onclick = () => { if (b.dataset.s === 'remote' || b.dataset.s === 'copy') { location.href = 'find.html'; return; } cur = b.dataset.s; history.replaceState(null,'','?s=' + cur); render(); });
+  }
+  function form(){
+    const v = S[cur], f = document.getElementById('form');
+    f.innerHTML = '<h2>' + A.esc(v.t[fr()?1:0]) + '</h2><div class="grid g2">' + v.fields.map(x => '<label class="f">' + (fr()?x[2]:x[1]) + '<input type="' + (/date|dob/.test(x[0]) ? 'date' : 'text') + '" id="f_' + x[0] + '" value="' + A.esc(x[3]) + '"></label>').join('') + '</div>' +
+      '<h3>' + L('Documents','Pièces') + '</h3>' + v.docs.map((d,i) => '<div class="row between" style="border:1px solid var(--line);border-radius:12px;padding:10px 14px"><span>' + A.esc(d[fr()?1:0]) + '</span><span class="row"><span class="small muted" id="ds' + i + '">' + L('Not added','Non ajouté') + '</span><label class="btn sm ghost">' + L('Photo','Photo') + '<input type="file" accept="image/*" class="sr" data-d="' + i + '"></label></span></div>').join('') +
+      (cur === 'marriage' ? '<div class="notice n-info">' + L('The notice is published for the legal period [to be confirmed] before the ceremony. You will choose the exact time with the registrar.','La publication est faite pendant le délai légal [à confirmer].') + '</div>' : '') +
+      (cur === 'remote' || cur === 'copy' ? '<button class="btn ghost" id="search" type="button">' + L('Search the registers now','Rechercher dans les registres') + '</button><div id="sres"></div>' : '') +
+      '<div class="row between"><span>' + L('Official fee: ','Frais officiels : ') + '<strong>' + A.fmt(v.fee) + '</strong></span><button class="btn" id="submit">' + L('Submit request','Envoyer la demande') + '</button></div><div id="out"></div>';
+    document.querySelectorAll('[data-d]').forEach(inp => inp.onchange = () => { document.getElementById('ds' + inp.dataset.d).textContent = '✓ ' + L('Added and readable','Ajouté et lisible'); });
+    const s = document.getElementById('search'); if (s) s.onclick = () => { document.getElementById('sres').innerHTML = '<div class="notice n-warn">' + L('Searching digitised registers…','Recherche…') + '</div>'; setTimeout(() => { document.getElementById('sres').innerHTML = '<div class="notice n-ok">' + L('Likely match found: register ' + document.getElementById('f_year').value + ', volume 2, entry 287 (AI confidence 93%). The registrar will confirm.','Correspondance probable : registre ' + document.getElementById('f_year').value + ', vol. 2, n° 287 (confiance 93 %).') + '</div>'; }, 900); };
+    document.getElementById('submit').onclick = () => {
+      const val = k => (document.getElementById('f_' + k) || {}).value || '';
+      const added = document.querySelectorAll('[id^=ds]').length - [...document.querySelectorAll('[id^=ds]')].filter(e => e.textContent.startsWith(L('Not','Non'))).length;
+      const name = cur === 'marriage' ? val('name') + ' & ' + val('p2') : val('name');
+      const r = A.addRequest({ id: A.newId(v.pre), council: A.state.council, type: v.type, name, parent: val('mother') || val('parents') || '', phone: '6XX XX XX 21', source: 'Citizen app', channel: 'App', lang: A.state.lang, created: A.TODAY, status: v.fee > 0 ? 'Awaiting registrar' : 'Awaiting registrar', fee: v.fee, paid: false, mine: true,
+        ai: added < v.docs.length ? { level: 'warn', text: (v.docs.length - added) + ' document(s) not yet attached.' + (cur === 'remote' ? ' Likely register match: ' + val('year') + ', vol. 2, entry 287.' : '') } : { level: 'ok', text: 'All documents attached and readable.' + (cur === 'remote' ? ' Register match: ' + val('year') + ', vol. 2, entry 287.' : '') },
+        history: [A.h(A.TODAY, v.type + ' request submitted in the app')] });
+      document.getElementById('out').innerHTML = '<div class="notice n-ok">' + L('Request submitted: ','Demande envoyée : ') + '<strong>' + r.id + '</strong>. ' + L('You will get SMS updates. ','Vous recevrez des SMS. ') + '<a href="track.html?id=' + r.id + '">' + A.t('nav.track') + '</a> · <a href="staff.html?id=' + r.id + '">' + L('Registrar view (demo)','Vue officier (démo)') + '</a></div>';
+    };
+  }
+  function render(){ tiles(); form(); }
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Assistant on WhatsApp</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<style>
+.wa{width:360px;max-width:100%;background:#ECE5DD;border-radius:28px;overflow:hidden;border:8px solid #1B1B1B;display:flex;flex-direction:column;height:680px}
+.wa .top{background:#075E54;color:#fff;padding:12px 14px;display:flex;flex-direction:column}
+.wa .body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.wa .b{max-width:80%;padding:8px 10px;border-radius:8px;font-size:14px;white-space:pre-line;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+.wa .in{background:#fff;align-self:flex-start}
+.wa .out{background:#DCF8C6;align-self:flex-end}
+.wa .bar{display:flex;gap:6px;padding:8px;background:#F0F0F0}
+.wa .bar input{flex:1;border-radius:20px;border:0;padding:10px 14px;min-height:42px}
+.wa .bar button{border:0;border-radius:50%;width:44px;height:44px;background:#128C7E;color:#fff;cursor:pointer;font-size:16px}
+</style>
+</head>
+<body data-portal="citizen" data-page="whatsapp">
+<div id="shell"></div>
+<main class="wrap">
+  <div class="split" style="align-items:center">
+    <section class="main stack" style="align-items:center">
+      <div class="wa">
+        <div class="top"><strong id="cname"></strong><span class="small" style="color:#CFE3D9">Verified council account (demo)</span></div>
+        <div class="body" id="body" aria-live="polite"></div>
+        <form class="bar" id="f"><label class="sr" for="m">Message</label><input id="m" placeholder="Message"><button type="button" id="mic" aria-label="Voice note">🎤</button><button aria-label="Send">➤</button></form>
+      </div>
+    </section>
+    <aside class="side card stack">
+      <h2 id="t"></h2>
+      <p style="margin:0" id="p"></p>
+      <div class="chips" id="tries"></div>
+    </aside>
+  </div>
+</main>
+<script>
+(function(){
+  const A = App, body = document.getElementById('body'); const fr = () => A.state.lang === 'fr'; const L = (e,f) => fr() ? f : e;
+  const add = (cls, txt) => { const d = document.createElement('div'); d.className = 'b ' + cls; d.textContent = txt; body.appendChild(d); body.scrollTop = body.scrollHeight; };
+  function ask(q, voice){ add('out', (voice ? '🎤 0:09 · ' : '') + q); setTimeout(() => { const a = A.assistantAnswer(q); add('in', a.text + (a.action ? '\n\n👉 ' + (a.lang==='fr'?a.action[2]:a.action[1]) + ': council app link' : '')); }, 600); }
+  function texts(){
+    document.getElementById('cname').textContent = A.council().name;
+    document.getElementById('t').textContent = L('The same assistant on WhatsApp','Le même assistant sur WhatsApp');
+    document.getElementById('p').textContent = L('Many residents already use WhatsApp every day. They can ask questions by text or voice note, receive updates and reminders, and get links to pay or download documents, without installing the app.','Questions par texte ou message vocal, mises à jour, rappels et liens de paiement, sans installer l’application.');
+    const T = ['Ma pikin no get birth certificate, wetin I go do?','How much is the rider jacket?','Where is my request BC-2026-01482?','Bonjour, comment obtenir une copie d’acte ?'];
+    document.getElementById('tries').innerHTML = T.map(q => '<button class="chip" type="button">' + A.esc(q) + '</button>').join('');
+    document.querySelectorAll('#tries .chip').forEach(c => c.onclick = () => ask(c.textContent));
+  }
+  add('in', L('Limbe II Council: your birth certificate request BC-2026-01482 is ready. Download: [link] · Printed copy from tomorrow 10am.','Votre acte BC-2026-01482 est prêt.'));
+  add('in', L('Reminder: free registration week for children without certificates, 1–5 December.','Rappel : semaine de déclaration gratuite du 1er au 5 décembre.'));
+  document.getElementById('f').addEventListener('submit', e => { e.preventDefault(); const m = document.getElementById('m'); if (m.value.trim()) ask(m.value); m.value = ''; });
+  document.getElementById('mic').onclick = () => ask('Ma pikin don reach seven year, e no get birth certificate. Wetin I go do?', true);
+  texts(); document.addEventListener('langchange', texts);
+})();
+</script>
+</body>
+</html>

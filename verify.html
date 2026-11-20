@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verify a certificate</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="citizen" data-page="verify">
+<div id="shell"></div>
+<main class="wrap" style="max-width:760px">
+  <div class="stack" style="gap:18px">
+    <h1 data-i18n="verify.title"></h1>
+    <p class="muted" style="margin:0" id="intro"></p>
+    <form id="f" class="card row">
+      <label class="f" style="flex:1 1 260px"><span data-i18n="verify.label"></span><input id="no" type="text" placeholder="LMB2-2026-B-01482"></label>
+      <button class="btn" style="align-self:flex-end" id="go"></button>
+      <button class="btn ghost" type="button" style="align-self:flex-end" id="scan"></button>
+    </form>
+    <div id="samples" class="small muted"></div>
+    <div id="out"></div>
+    <section class="card stack" id="message">
+      <h2>Is this message really from the council?</h2>
+      <p class="small muted" style="margin:0">Paste an SMS or WhatsApp message you received. The assistant checks the sender and the payment instructions.</p>
+      <label class="f">Sender<input type="text" id="msender" value="+237 6XX XX XX 55"></label>
+      <label class="f">Message<textarea id="mtext" style="min-height:90px">LIMBE II COUNCIL: Your birth certificate is ready. To avoid cancellation send 5,000 FCFA today by MoMo to 6XX XX XX 55 (Mr Tabi).</textarea></label>
+      <div class="row"><button class="btn" type="button" id="mcheck">Check message</button><button class="btn ghost sm" type="button" id="mgood">Try a genuine example</button></div>
+      <div id="mout"></div>
+    </section>
+  </div>
+</main>
+<script>
+(function(){
+  const A = App;
+  function check(no){
+    const fr = A.state.lang === 'fr', out = document.getElementById('out'); if (!no) { out.innerHTML=''; return; }
+    const v = no.trim().toUpperCase();
+    const r = A.state.requests.find(x => (x.certNo && x.certNo.toUpperCase() === v) || (x.receipt && x.receipt.toUpperCase() === v));
+    if (!r) { out.innerHTML = '<div class="card stack" style="border-color:#F7C1C1"><span class="badge b-risk" style="align-self:flex-start;font-size:14px">✗ ' + (fr?'Non trouvé':'Not found') + '</span><p style="margin:0">' + (fr?'Aucun acte ni reçu ne correspond à ce numéro. Le document peut être faux. Contactez la commune.':'No certificate or receipt matches this number. The document may not be genuine. Contact the council.') + '</p></div>'; return; }
+    const masked = r.name.split(' ').map((w,i) => i === 0 ? w : w[0] + '.').join(' ');
+    out.innerHTML = '<div class="card stack" style="border-color:#9FE1CB"><span class="badge b-ok" style="align-self:flex-start;font-size:14px">✓ ' + (fr?'Authentique':'Genuine') + '</span><table><tbody>' +
+      [[fr?'Type':'Type', r.type],[fr?'Nom':'Name', masked],[fr?'Commune':'Council', (A.state.councils.find(c=>c.id===r.council)||{}).name],[fr?'Statut':'Status', r.status]].map(x => '<tr><td class="muted">' + x[0] + '</td><td><strong>' + A.esc(x[1]) + '</strong></td></tr>').join('') +
+      '</tbody></table><p class="small muted" style="margin:0">' + (fr?'Pour protéger la vie privée, seules les informations nécessaires à la vérification sont affichées.':'To protect privacy, only what is needed to confirm authenticity is shown.') + '</p></div>';
+  }
+  function texts(){
+    const fr = A.state.lang === 'fr';
+    document.getElementById('intro').textContent = fr ? 'Pour les écoles, employeurs et administrations : vérifiez qu’un acte ou un reçu a bien été émis par la commune.' : 'For schools, employers, agents and other administrations: check that a certificate or receipt was really issued by the council.';
+    document.getElementById('go').textContent = fr ? 'Vérifier' : 'Verify';
+    document.getElementById('scan').textContent = fr ? 'Scanner le QR (démo)' : 'Scan QR (demo)';
+    const s = A.state.requests.filter(r => r.certNo || r.receipt).slice(0,3).map(r => r.certNo || r.receipt);
+    document.getElementById('samples').innerHTML = (fr?'Exemples : ':'Try: ') + s.map(x => '<a href="?no=' + x + '">' + x + '</a>').join(' · ') + ' · <a href="?no=LMB2-2025-B-99999">LMB2-2025-B-99999</a> ' + (fr?'(faux)':'(fake)');
+  }
+  document.getElementById('f').addEventListener('submit', e => { e.preventDefault(); check(document.getElementById('no').value); });
+  document.getElementById('scan').onclick = () => { document.getElementById('no').value = 'LMB2-2026-B-01482'; A.toast('QR scanned (demo)'); check('LMB2-2026-B-01482'); };
+  const n = A.param('no'); if (n) document.getElementById('no').value = n;
+  texts(); check(n); document.addEventListener('langchange', () => { texts(); check(document.getElementById('no').value); });
+})();
+</script>
+<script>
+(function(){
+  const A = App, $ = id => document.getElementById(id);
+  $('mgood').onclick = () => { $('msender').value = 'LIMBE II'; $('mtext').value = 'LIMBE II: Your request BC-2026-01482 is ready. Pay 2,000 FCFA in the app or dial *126*55# (merchant LIMBE II COUNCIL). Ref BC-2026-01482.'; };
+  $('mcheck').onclick = () => {
+    const snd = $('msender').value.trim(), t = $('mtext').value, issues = [];
+    const official = /^LIMBE II$/i.test(snd);
+    if (!official) issues.push('The sender is not an official council channel. The council only writes from “LIMBE II” or its published WhatsApp number.');
+    if (/send|envoy/i.test(t) && /6\s?[X\d]{2}/i.test(t.replace(/\*126\*55#/,''))) issues.push('It asks you to send money to a personal number. The council never does this; payments go only through the app, USSD or the council merchant account with a QR receipt.');
+    if (/today|cancel|urgent|immédiat|annul/i.test(t)) issues.push('It uses pressure (“today”, “cancellation”). Council requests do not expire like this.');
+    const id = (t.match(/[A-Z]{2}-\d{4}-\d{5}/) || [])[0], r = id && A.findReq(id);
+    if (id && !r) issues.push('The request number ' + id + ' does not exist.');
+    $('mout').innerHTML = issues.length ? '<div class="notice n-risk"><strong>This looks like a scam. Do not pay.</strong><ul style="margin:6px 0 0 18px">' + issues.map(i => '<li>' + A.esc(i) + '</li>').join('') + '</ul><a class="btn sm" style="margin-top:8px" href="complaints.html">Report it to the council</a></div>'
+      : '<div class="notice n-ok"><strong>This message matches an official council channel.</strong>' + (r ? ' Request ' + r.id + ' exists: ' + A.esc(A.plain(r)) : '') + '</div>';
+  };
+  if (location.hash === '#message') setTimeout(() => $('message').scrollIntoView(), 50);
+})();
+</script>
+</body>
+</html>

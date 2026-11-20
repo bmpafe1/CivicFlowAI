@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>News, jobs and council decisions</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+</head>
+<body data-portal="citizen" data-page="news">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:22px">
+  <h1 id="h"></h1>
+  <div class="split">
+    <section class="main stack" id="news"></section>
+    <aside class="side stack">
+      <div class="card stack"><h2 id="pTitle"></h2><p class="small muted" style="margin:0" id="pIntro"></p><div class="stack" id="pubs"></div></div>
+      <div class="card stack"><h2 id="sTitle"></h2><div class="stack" id="subs"></div></div>
+    </aside>
+  </div>
+  <section class="card stack" id="jobs"><h2 id="jTitle"></h2><div class="grid g3" id="jlist"></div><div id="jout"></div></section>
+</main>
+<script>
+(function(){
+  const A = App, D = DATA; const fr = () => A.state.lang === 'fr'; const L = (e,f) => fr() ? f : e;
+  function render(){
+    const i = fr() ? 1 : 0;
+    document.getElementById('h').textContent = L('News, decisions and jobs','Actualités, décisions et emplois');
+    document.getElementById('news').innerHTML = D.news.map(n => '<article class="card stack" style="gap:6px"><div class="row between"><span class="badge b-info">' + n.tag + '</span><span class="small muted">' + A.dateFmt(n.date) + '</span></div><h2 style="font-size:18px">' + A.esc(n.title[i]) + '</h2><p style="margin:0">' + A.esc(n.body[i]) + '</p><div class="row"><button class="btn sm ghost" onclick="App.toast(\'Reading aloud (demo)\')">▶ ' + L('Listen','Écouter') + '</button><button class="btn sm ghost" onclick="App.toast(\'Shared to WhatsApp (demo)\')">' + L('Share on WhatsApp','Partager sur WhatsApp') + '</button></div></article>').join('');
+    document.getElementById('pTitle').textContent = L('Council decisions and budgets','Décisions et budgets');
+    document.getElementById('pIntro').textContent = L('Published in English and French for transparency.','Publiés en anglais et en français.');
+    document.getElementById('pubs').innerHTML = D.publications.map(p => '<button class="row between" style="border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;cursor:pointer;text-align:left" onclick="App.toast(\'Opening document (demo)\')"><strong class="small">' + A.esc(p[i]) + '</strong><span class="small muted">' + p[2] + '</span></button>').join('');
+    document.getElementById('sTitle').textContent = L('Get news by','Recevoir les actualités par');
+    const subs = A.state.notifications || { sms: true, whatsapp: false, voice: false };
+    document.getElementById('subs').innerHTML = [['sms','SMS'],['whatsapp','WhatsApp'],['voice', L('Voice message','Message vocal')]].map(s => '<label class="row small"><input type="checkbox" data-sub="' + s[0] + '"' + (subs[s[0]] ? ' checked' : '') + ' style="width:20px;height:20px"> ' + s[1] + '</label>').join('');
+    document.querySelectorAll('[data-sub]').forEach(c => c.onchange = () => { const n = A.state.notifications || { sms: true, whatsapp: false, voice: false }; n[c.dataset.sub] = c.checked; A.state.notifications = n; A.save(); A.toast(L('Preferences saved','Préférences enregistrées')); });
+    document.getElementById('jTitle').textContent = L('Council jobs and apprenticeships','Emplois et apprentissages à la commune');
+    document.getElementById('jlist').innerHTML = D.jobs.map(j => { const applied = A.state.jobApps.includes(j.id); return '<div class="card flat stack" style="background:var(--tint);gap:6px"><strong>' + A.esc(j.title[i]) + '</strong><span class="small">' + j.type + '</span><span class="small muted">' + A.esc(j.desc) + '</span><span class="small">' + L('Closes ','Clôture ') + A.dateFmt(j.close) + '</span>' + (applied ? '<span class="badge b-ok" style="align-self:flex-start">✓ ' + L('Application sent','Candidature envoyée') + '</span>' : '<button class="btn sm" data-j="' + j.id + '">' + L('Apply online','Postuler') + '</button>') + '</div>'; }).join('');
+    document.querySelectorAll('[data-j]').forEach(b => b.onclick = () => { A.state.jobApps.push(b.dataset.j); A.save(); document.getElementById('jout').innerHTML = '<div class="notice n-ok">' + L('Application sent with your profile and CV (demo). You will get an SMS.','Candidature envoyée (démo).') + '</div>'; render(); });
+  }
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

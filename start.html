@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demo guide – Digital Council Services Platform</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="tour" data-page="start">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:22px;max-width:1000px">
+  <section class="hero">
+    <h1>Digital Council Services Platform: working prototype</h1>
+    <p>A clickable demonstration with fictional data, prepared for Limbe II Council and partners. Everything you do here is saved only in this browser, and the different views share the same data: a request made by a citizen appears in the registrar's queue, and so on.</p>
+    <div class="row"><a class="btn gold" href="index.html">Open the citizen app</a><a class="btn ghost" href="#journeys">Follow a guided journey</a></div>
+  </section>
+
+  <section class="grid g3">
+    <a class="tile" href="index.html"><strong>Citizen</strong><span class="small muted">Web and mobile app: assistant, services, tracking, payments, verification, riders</span></a>
+    <a class="tile" href="ussd.html"><strong>Basic phone</strong><span class="small muted">USSD menu for people without smartphones</span></a>
+    <a class="tile" href="clinic.html"><strong>Health centre</strong><span class="small muted">Notify births and deaths, enrol expectant mothers, works offline</span></a>
+    <a class="tile" href="staff.html"><strong>Registrar</strong><span class="small muted">Work queue with AI pre-checks, approve or return, register digitisation</span></a>
+    <a class="tile" href="dashboard.html"><strong>Council management</strong><span class="small muted">On-time registration, revenue, channels, citizen questions, extortion reports</span></a>
+    <a class="tile" href="platform.html"><strong>All councils</strong><span class="small muted">Add a new council by configuration; connected services</span></a>
+    <a class="tile" href="archives.html"><strong>Archives (EDMS)</strong><span class="small muted">Digitised registers, scan station, AI reading and analysis, retrieval requests</span></a>
+    <a class="tile" href="find.html"><strong>Find my certificate</strong><span class="small muted">AI search with instant download, manual retrieval or other councils</span></a>
+    <a class="tile" href="council.html"><strong>Our council</strong><span class="small muted">Projects and progress, events, news, gallery, reports, contacts</span></a>
+    <a class="tile" href="learn.html"><strong>Learning centre</strong><span class="small muted">Courses with audio and quizzes, videos, training, careers, health-worker training</span></a>
+    <a class="tile" href="treasury.html"><strong>Treasurer</strong><span class="small muted">Reconciliation, exemptions, refunds, operator register</span></a>
+    <a class="tile" href="agent.html"><strong>Field agent</strong><span class="small muted">Scan badges, receipts and licences</span></a>
+    <a class="tile" href="admin.html"><strong>Administration</strong><span class="small muted">Staff and roles, audit, fees, bilingual content, AI knowledge base, sessions, transparency</span></a>
+    <a class="tile" href="whatsapp.html"><strong>WhatsApp</strong><span class="small muted">The assistant and notifications on WhatsApp</span></a>
+    <a class="tile" href="coverage.html"><strong>Coverage</strong><span class="small muted">Every use case mapped to a screen</span></a>
+  </section>
+
+  <section id="journeys" class="stack">
+    <h2>Guided journeys (5–10 minutes each)</h2>
+    <div class="card stack">
+      <h3>A. A birth in a health centre</h3>
+      <ol class="stack" style="gap:6px;margin:0;padding-left:20px">
+        <li><a href="clinic.html">Health centre</a>: open "Notify a birth" and press Send. Try "Simulate no network" first to see offline saving.</li>
+        <li>Follow the link to the parent's screen and press "Everything is correct".</li>
+        <li>Open the <a href="staff.html">registrar queue</a>, select the new request, read the AI pre-check, press "Approve and sign".</li>
+        <li>Back on the citizen side, <a href="track.html">track the request</a> and open the certificate with its QR code, then check it on <a href="verify.html">Verify</a>.</li>
+      </ol>
+    </div>
+    <div class="card stack">
+      <h3>B. Late registration with the AI assistant, in Pidgin and by voice</h3>
+      <ol class="stack" style="gap:6px;margin:0;padding-left:20px">
+        <li>Open the <a href="assistant.html">assistant</a> and press the yellow microphone button (a demo voice note in Pidgin is used). Press "Listen" to hear the answer.</li>
+        <li>Press "Start the request", answer the questions, add photos of documents (any image), choose an appointment and submit.</li>
+        <li>In the <a href="staff.html">registrar queue</a>, the request shows what is missing. Approve it, then pay it from the citizen's <a href="track.html">tracking page</a> with mobile money (any 4-digit PIN).</li>
+      </ol>
+    </div>
+    <div class="card stack">
+      <h3>C. A lost certificate, from another town, in French</h3>
+      <ol class="stack" style="gap:6px;margin:0;padding-left:20px">
+        <li>Switch to FR (top right) and ask the <a href="assistant.html">assistant</a>: "J'ai perdu l'acte de naissance de mon fils pendant la crise".</li>
+        <li>See request <a href="track.html?id=CP-2026-00890">CP-2026-00890</a>, found by the AI in the digitised 2009 register; then <a href="staff.html?id=CP-2026-00890">approve it as the registrar</a>.</li>
+        <li>Open "Register digitisation" in the registrar view to see how old handwritten registers are captured.</li>
+      </ol>
+    </div>
+    <div class="card stack">
+      <h3>C2. Lost certificate: instant, manual or another council</h3>
+      <ol class="stack" style="gap:6px;margin:0;padding-left:20px">
+        <li>Open <a href="find.html">Find my certificate</a> and try the three examples: Marie Ngole 2009 (digitised: pay and download at once), Clovis Ayuk 2004 (not yet scanned: pay, then wait about 3 days), Mary Ebot Ashu 1998 (found at other councils).</li>
+        <li>For Clovis Ayuk, go to <a href="archives.html?tab=tasks">Archives › Retrieval requests</a>, upload any image as the scanned page, check the AI reading and issue. Track the request as the citizen: it is ready to download. Search Clovis Ayuk again: it is now instant.</li>
+        <li>Explore the scan station, archive search and AI analysis in <a href="archives.html">Archives</a>.</li>
+      </ol>
+    </div>
+    <div class="card stack">
+      <h3>D. Moto-taxi rider and anti-extortion</h3>
+      <ol class="stack" style="gap:6px;margin:0;padding-left:20px">
+        <li>On <a href="rider.html">Riders</a>, look up MR-0937 (valid) and MR-1022 (expired); buy a jacket online.</li>
+        <li>Send an anonymous report of an illegal demand, then see it on the <a href="dashboard.html">management dashboard</a>.</li>
+        <li>Ask the <a href="assistant.html?q=A man said I must pay 10,000 for the jacket or he will seize my bike">assistant</a> about the same situation.</li>
+      </ol>
+    </div>
+    <div class="card stack">
+      <h3>E. A new council joins</h3>
+      <ol class="stack" style="gap:6px;margin:0;padding-left:20px">
+        <li>On the <a href="platform.html">platform console</a>, create "Kumba II Council".</li>
+        <li>Choose it in the council selector of the citizen, registrar or management view, or choose "Commune de Douala III" to see a French-speaking council.</li>
+      </ol>
+    </div>
+    <div class="card stack">
+      <h3>F. Citizen learning and training</h3>
+      <ol class="stack" style="gap:6px;margin:0;padding-left:20px">
+        <li>Open <a href="learn.html">Learn &amp; jobs</a>, start "Why and how to register a birth on time", press Listen on a lesson and answer the quick check.</li>
+        <li>Open "Training, online learning and careers" and book a place at the computer skills session or the career fair; see the course badge in <a href="account.html">My account</a>.</li>
+        <li>Health workers: "For health workers" tab, also linked from the <a href="clinic.html">health centre portal</a>.</li>
+      </ol>
+    </div>
+    <div class="card stack">
+      <h3>G. Running the council</h3>
+      <ol class="stack" style="gap:6px;margin:0;padding-left:20px">
+        <li><a href="admin.html">Administration</a>: add a staff member, change a fee (it changes everywhere), try to publish news without French, approve an assistant answer, draft bilingual minutes.</li>
+        <li><a href="treasury.html">Treasurer</a>: reconcile payments, grant an exemption, approve a refund. <a href="agent.html">Field agent</a>: scan a badge or licence.</li>
+        <li><a href="dashboard.html">Management</a>: ask a question about your data, send a sensitisation campaign.</li>
+        <li><a href="admin.html#public">Administration › Public page</a>: publish a project, update its progress, add an event or upload a photo, then see it on <a href="council.html">Our council</a> (follow a project, download an event to your calendar).</li>
+        <li>Open the <a href="app.html">Mobile app</a> view in one tab and <a href="admin.html#theme">Administration › Look and feel</a> in another. Pick a theme or your own colours: the website and the phones change at once. Switch to Commune de Douala III to see it keeps its own theme.</li>
+      </ol>
+    </div>
+  </section>
+  <section class="card stack">
+    <h3>Every use case, ticked off</h3>
+    <p class="small" style="margin:0">The <a href="coverage.html">Coverage page</a> lists all 88 use cases from the validation document and links each one to the screen that demonstrates it.</p>
+  </section>
+  <section class="card stack">
+    <h3>Good to know</h3>
+    <ul class="small" style="margin:0;padding-left:18px">
+      <li>All people, numbers, fees and statistics are fictional and for discussion only. Fees must be confirmed by the council.</li>
+      <li>The assistant here is a rule-based demo of how answers will work. In the real platform, an AI model answers only from the council's verified knowledge base, in English, French and Pidgin, by text and voice.</li>
+      <li>Mobile money, SMS, USSD and BUNEC connections are simulated.</li>
+      <li>"Reset demo data" in the dark bar restores the original data.</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Moto-taxi riders</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="citizen" data-page="riders">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <h1 data-i18n="nav.riders"></h1>
+  <div class="grid g2">
+    <section class="card stack">
+      <h2 id="bTitle"></h2>
+      <form id="lf" class="row">
+        <label class="f" style="flex:1 1 200px"><span id="lLbl"></span><input id="lookup" type="text" value="MR-0937"></label>
+        <button class="btn" style="align-self:flex-end" id="lBtn"></button>
+      </form>
+      <div class="small muted">MR-0937 · MR-1022 · MR-0550</div>
+      <div id="badge"></div>
+    </section>
+    <section class="card stack">
+      <h2 id="fTitle"></h2>
+      <table id="fees"></table>
+      <button class="btn" id="buy"></button>
+      <button class="btn ghost" id="newRider">Register as a new rider · 5,000 FCFA</button>
+      <p class="small muted" style="margin:0" id="buyNote"></p>
+    </section>
+  </div>
+  <section class="card stack" id="report" style="background:var(--red-soft);border-color:#F7C1C1">
+    <h2 style="color:var(--red-ink)" id="rTitle"></h2>
+    <p style="margin:0;color:#501313" id="rIntro"></p>
+    <form id="rf" class="grid g3">
+      <label class="f"><span id="rl1"></span><input type="text" id="rwhere" value="Mile 2 junction"></label>
+      <label class="f"><span id="rl2"></span><input type="text" id="rwhen" value="Today, around 8am"></label>
+      <label class="f"><span id="rl3"></span><input type="number" id="ramount" value="10000"></label>
+      <label class="f" style="grid-column:1/-1"><span id="rl4"></span><textarea id="rdesc">A man without uniform said I must pay 10,000 FCFA cash for the jacket or he would seize my bike.</textarea></label>
+      <div class="row" style="grid-column:1/-1"><button class="btn danger" id="rBtn"></button><span class="small" style="color:#501313" id="rNote"></span></div>
+    </form>
+    <div id="rOut"></div>
+  </section>
+</main>
+<script>
+(function(){
+  const A = App;
+  function badge(no){
+    const fr = A.state.lang === 'fr', r = A.RIDERS.find(x => x.no.toUpperCase() === no.trim().toUpperCase() || x.plate.replace(/\s/g,'').toUpperCase() === no.replace(/\s/g,'').toUpperCase());
+    const el = document.getElementById('badge');
+    if (!r) { el.innerHTML = '<div class="notice n-risk">' + (fr?'Aucun moto-taximan trouvé.':'No rider found with that number or plate.') + '</div>'; return; }
+    const valid = r.paidUntil >= A.TODAY;
+    el.innerHTML = '<div class="row" style="background:var(--ink);color:#fff;border-radius:16px;padding:18px;gap:18px;align-items:center"><div class="stack" style="gap:4px;flex:1"><span class="small" style="color:#C9D2CE">' + (fr?'Badge numérique · ':'Digital rider badge · ') + A.esc(A.council().name) + '</span><strong style="font-size:19px">' + A.esc(r.name) + '</strong><span class="small" style="color:#C9D2CE">' + r.plate + ' · ' + r.no + '</span>' +
+      '<span class="badge ' + (valid?'b-ok':'b-risk') + '" style="align-self:flex-start">' + (valid ? (fr?'Valide jusqu’au ':'Fees paid until ') + A.dateFmt(r.paidUntil) : (fr?'Expiré le ':'Expired on ') + A.dateFmt(r.paidUntil)) + '</span>' +
+      '<span class="small" style="color:#C9D2CE">' + (fr?'Chasuble : ':'Jacket: ') + (r.jacket ? (fr?'oui':'yes') : (fr?'pas encore':'not yet')) + '</span></div><div style="background:#fff;border-radius:8px;padding:6px">' + A.qrSvg(r.no, 96) + '</div></div>' +
+      (valid ? '' : '<a class="btn" href="#" id="renew" style="margin-top:10px">' + (fr?'Renouveler ':'Renew now · ') + A.fmt(5000) + '</a>');
+    const rn = document.getElementById('renew'); if (rn) rn.onclick = e => { e.preventDefault(); start('Rider renewal', 5000, r); };
+  }
+  function start(type, fee, r){
+    const req = A.addRequest({ id: A.newId('RD'), council: A.state.council, type, name: r ? r.name : 'Emmanuel Tabe', parent: '', phone: '6XX XX XX 73', source: 'Citizen app', channel: 'App', lang: A.state.lang, created: A.TODAY, status: 'Awaiting payment', fee, paid: false, mine: true, ai: { level: 'ok', text: 'Standard fee. No review needed.' }, history: [A.h(A.TODAY, type + ' ordered in the app')] });
+    location.href = 'pay.html?id=' + req.id;
+  }
+  function render(){
+    const fr = A.state.lang === 'fr';
+    document.getElementById('bTitle').textContent = fr ? 'Mon badge / vérifier un badge' : 'My badge, or check a rider';
+    document.getElementById('lLbl').textContent = fr ? 'Numéro ou plaque' : 'Rider number or plate';
+    document.getElementById('lBtn').textContent = fr ? 'Afficher' : 'Show';
+    document.getElementById('fTitle').textContent = fr ? 'Tarifs officiels' : 'Official rider fees';
+    document.getElementById('fees').innerHTML = '<tbody>' + A.FEES.filter(f => ['rider','jacket','smalltax'].includes(f.id)).map(f => '<tr><td>' + A.esc(fr?f.fr:f.en) + '</td><td style="text-align:right"><strong>' + A.fmt(f.amount) + '</strong> <span class="small muted">' + f.unit + '</span></td></tr>').join('') + '</tbody>';
+    document.getElementById('buy').textContent = fr ? 'Acheter la chasuble en ligne · ' + A.fmt(6500) : 'Buy the jacket online · ' + A.fmt(6500);
+    document.getElementById('buyNote').textContent = fr ? 'Retrait sans file d’attente au créneau choisi.' : 'Collect it at a time you choose, without queuing at a single window.';
+    document.getElementById('rTitle').textContent = fr ? 'Quelqu’un vous demande de l’argent ?' : 'Someone asking you for money?';
+    document.getElementById('rIntro').textContent = fr ? 'Signalez-le anonymement. Le rapport va directement à l’agent désigné de la commune.' : 'Report it anonymously. Your report goes straight to the council’s designated officer. Your name and number are not shared.';
+    [['rl1','Where','Où'],['rl2','When','Quand'],['rl3','Amount asked (FCFA)','Montant demandé (FCFA)'],['rl4','What happened','Que s’est-il passé']].forEach(x => document.getElementById(x[0]).textContent = fr ? x[2] : x[1]);
+    document.getElementById('rBtn').textContent = fr ? 'Envoyer anonymement' : 'Send anonymously';
+    document.getElementById('rNote').textContent = fr ? 'Ou dites-le à l’assistant par la voix.' : 'You can also tell the assistant by voice.';
+    badge(document.getElementById('lookup').value);
+  }
+  document.getElementById('lf').addEventListener('submit', e => { e.preventDefault(); badge(document.getElementById('lookup').value); });
+  document.getElementById('buy').onclick = () => start('Rider jacket', 6500, A.RIDERS[2]);
+  document.getElementById('newRider').onclick = () => start('Rider registration', 5000, { name: 'New rider (demo)' });
+  document.getElementById('rf').addEventListener('submit', e => {
+    e.preventDefault(); const ref = 'RPT-2026-' + String(31 + A.state.reports.length).padStart(4,'0');
+    A.state.reports.push({ ref, council: A.state.council, where: document.getElementById('rwhere').value, when: document.getElementById('rwhen').value, amount: +document.getElementById('ramount').value, desc: document.getElementById('rdesc').value, date: A.TODAY }); A.save();
+    const fr = A.state.lang === 'fr';
+    document.getElementById('rOut').innerHTML = '<div class="notice n-ok">' + (fr?'Merci. Signalement reçu, référence ':'Thank you. Report received, reference ') + ref + (fr?'. Il apparaît dans le tableau de bord de la commune.':'. It now appears on the council management dashboard.') + '</div>';
+  });
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

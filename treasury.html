@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Treasury</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+</head>
+<body data-portal="treasury" data-page="treasury">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <div class="stack" style="gap:2px"><h1 style="font-size:24px">Treasury · payments and revenue</h1><span class="small muted">Signed in: Treasurer Nfor (demo) · all amounts fictional</span></div>
+  <div class="grid g4" id="kpis"></div>
+  <section class="card stack">
+    <h2>Daily reconciliation · 12 Nov 2026</h2>
+    <p class="small muted" style="margin:0">Payments recorded by the platform, matched automatically against mobile money statements.</p>
+    <div class="scroll-x"><table id="recon"></table></div>
+  </section>
+  <section class="card stack">
+    <h2>AI: unusual payments to check</h2>
+    <p class="small muted" style="margin:0">Patterns the AI noticed in the last 30 days. They are prompts to look, not accusations; the treasurer decides what to do.</p>
+    <table><thead><tr><th>Pattern</th><th>Details</th><th></th></tr></thead><tbody id="flags"></tbody></table>
+  </section>
+  <div class="grid g2">
+    <section class="card stack">
+      <h2>Fee exemptions</h2>
+      <p class="small muted" style="margin:0">Waive a fee for a campaign or a hardship case. Every exemption is logged with a reason.</p>
+      <label class="f">Request<select id="exReq"></select></label>
+      <label class="f">Reason<select id="exWhy"><option>Free registration week (1–5 Dec)</option><option>Hardship (approved by Secretary General)</option><option>Within legal period</option></select></label>
+      <button class="btn sm" id="exBtn" style="align-self:flex-start">Grant exemption</button>
+      <div id="exList" class="stack"></div>
+    </section>
+    <section class="card stack">
+      <h2>Refunds</h2>
+      <div class="scroll-x"><table id="refunds"></table></div>
+    </section>
+  </div>
+  <section class="card stack">
+    <div class="row between"><h2>Register of small operators</h2><button class="btn sm ghost" id="remind">Send payment reminders to expired operators</button></div>
+    <div class="scroll-x"><table id="ops"></table></div>
+  </section>
+  <section class="card stack"><div class="row between"><h2>Revenue report</h2><button class="btn sm ghost" onclick="App.toast('Exporting monthly report (demo)')">Export (Excel / PDF)</button></div><div class="bars" id="rev"></div></section>
+</main>
+<script>
+(function(){
+  const A = App, D = DATA;
+  const REFUNDS = [{ ref: 'RC-2026-77211', who: 'Ndive Eposi', amount: 2000, why: 'Paid twice for the same copy', status: 'Approved' }, { ref: 'RC-2026-77290', who: 'Cyril Ngwa', amount: 6500, why: 'Jacket out of stock', status: 'Pending' }];
+  function render(){
+    const paid = A.requests().filter(r => r.paid);
+    const today = paid.filter(r => r.history.some(h => h.date === A.TODAY && /Paid/.test(h.text)));
+    const sum = a => a.reduce((s,r) => s + r.fee, 0);
+    document.getElementById('kpis').innerHTML = [['Collected today', A.fmt(sum(today) + 148500)],['Transactions today', today.length + 41],['Unmatched payments', 1],['Operators with expired payments', D.operators.filter(o => o.paid < A.TODAY).length]].map((k,i) => '<div class="kpi"><div class="v" style="font-size:24px;' + (i===2?'color:var(--red)':'') + '">' + k[1] + '</div><div class="l">' + k[0] + '</div></div>').join('');
+    const rows = [['MTN Mobile Money', 96500 + sum(today.filter(r => (r.payMethod||'').includes('MTN'))), 31, 'Matched'],['Orange Money', 38000 + sum(today.filter(r => (r.payMethod||'').includes('Orange'))), 9, '1 unmatched (RC-2026-77318: 2,000 FCFA)'],['Council cashier (cash)', 14000, 4, 'Matched with till']];
+    document.getElementById('recon').innerHTML = '<thead><tr><th>Channel</th><th>Amount</th><th>Transactions</th><th>Status</th></tr></thead><tbody>' + rows.map(r => '<tr><td>' + r[0] + '</td><td><strong>' + A.fmt(r[1]) + '</strong></td><td>' + r[2] + '</td><td><span class="badge ' + (r[3].startsWith('Matched') ? 'b-ok' : 'b-warn') + '">' + r[3] + '</span></td></tr>').join('') + '</tbody>';
+    document.getElementById('exReq').innerHTML = A.requests().filter(r => r.fee > 0 && !r.paid).map(r => '<option value="' + r.id + '">' + r.id + ' · ' + A.esc(r.name) + ' · ' + A.fmt(r.fee) + '</option>').join('');
+    document.getElementById('exList').innerHTML = A.state.exemptions.map(e => '<div class="notice n-ok small">' + e.id + ' · ' + A.esc(e.why) + ' · ' + A.dateFmt(e.date) + '</div>').join('');
+    document.getElementById('refunds').innerHTML = '<thead><tr><th>Receipt</th><th>Citizen</th><th>Amount</th><th>Reason</th><th></th></tr></thead><tbody>' + REFUNDS.map((r,i) => { const st = A.state.refunds.includes(r.ref) ? 'Approved' : r.status; return '<tr><td>' + r.ref + '</td><td>' + r.who + '</td><td>' + A.fmt(r.amount) + '</td><td class="small">' + r.why + '</td><td>' + (st === 'Pending' ? '<button class="btn sm" data-rf="' + r.ref + '">Approve refund</button>' : '<span class="badge b-ok">Refunded to mobile money</span>') + '</td></tr>'; }).join('') + '</tbody>';
+    document.querySelectorAll('[data-rf]').forEach(b => b.onclick = () => { A.state.refunds.push(b.dataset.rf); A.save(); A.toast('Refund approved and logged'); render(); });
+    document.getElementById('ops').innerHTML = '<thead><tr><th>No.</th><th>Operator</th><th>Activity</th><th>Category</th><th>Zone</th><th>Paid until</th></tr></thead><tbody>' + D.operators.concat(A.RIDERS.map(r => ({ id: r.no, name: r.name + ' (' + r.plate + ')', type: 'Moto-taxi', cat: '—', zone: 'Limbe II', paid: r.paidUntil }))).map(o => '<tr><td>' + o.id + '</td><td>' + A.esc(o.name) + '</td><td>' + o.type + '</td><td>' + o.cat + '</td><td>' + o.zone + '</td><td><span class="badge ' + (o.paid >= A.TODAY ? 'b-ok' : 'b-risk') + '">' + A.dateFmt(o.paid) + '</span></td></tr>').join('') + '</tbody>';
+    const S = A.STATS[A.state.council] || A.STATS.limbe2, max = Math.max(...S.revenue.map(r => r[1]), 1);
+    document.getElementById('rev').innerHTML = S.revenue.map(r => '<div class="bar"><span>' + r[0] + '</span><div class="track"><div class="fill" style="width:' + (r[1]/max*100) + '%"></div></div><span style="text-align:right">' + (r[1]/1000) + 'k</span></div>').join('');
+  }
+  document.getElementById('exBtn').onclick = () => { const id = document.getElementById('exReq').value; if (!id) return; A.updateRequest(id, { fee: 0, status: A.findReq(id).status === 'Awaiting payment' ? 'Ready' : A.findReq(id).status }, 'Fee waived: ' + document.getElementById('exWhy').value); A.state.exemptions.push({ id, why: document.getElementById('exWhy').value, date: A.TODAY }); A.save(); A.toast('Exemption granted and logged'); render(); };
+  document.getElementById('remind').onclick = () => A.toast('SMS reminders sent to ' + (D.operators.filter(o => o.paid < A.TODAY).length + A.RIDERS.filter(r => r.paidUntil < A.TODAY).length) + ' operators in their language');
+  render();
+})();
+</script>
+<script>
+(function(){
+  const F = [['Cash below expected level','Counter 2 recorded 38% less cash for copy requests than the number of copies printed (12-18 Nov, demo).'],['Repeated refunds','5 refunds to the same mobile money number in 3 weeks (6XX XX XX 33).'],['Many fee waivers by one account','11 late-registration fees waived by one staff account this month; council average is 2.']];
+  const tb = document.getElementById('flags');
+  tb.innerHTML = F.map((f,i) => '<tr><td><strong class="small">' + f[0] + '</strong></td><td class="small">' + f[1] + '</td><td><span class="row" style="gap:6px"><button class="btn sm ghost" data-f="' + i + '" data-v="Explained">Explained</button><button class="btn sm" data-f="' + i + '" data-v="Investigating">Look into it</button></span></td></tr>').join('');
+  tb.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { b.closest('td').innerHTML = '<span class="badge ' + (b.dataset.v === 'Explained' ? 'b-ok' : 'b-warn') + '">' + b.dataset.v + '</span>'; App.toast('Decision logged in the audit trail'); });
+})();
+</script>
+</body>
+</html>

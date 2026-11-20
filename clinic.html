@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Health centre portal</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="clinic" data-page="clinic">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <div class="row between">
+    <div class="stack" style="gap:2px"><h1 style="font-size:24px">Health centre portal</h1><span class="muted small">Signed in: Nurse Agnes Ebot · Maternity · linked to Limbe II Council</span></div>
+    <label class="row small"><input type="checkbox" id="offline" style="width:20px;height:20px"> Simulate no network</label>
+  </div>
+  <div class="row" role="tablist">
+    <button class="btn" data-tab="home">Overview</button>
+    <button class="btn ghost" data-tab="birth">Notify a birth</button>
+    <button class="btn ghost" data-tab="death">Notify a death</button>
+    <button class="btn ghost" data-tab="ante">Enrol expectant mother</button>
+    <button class="btn ghost" data-tab="desk">Council desk: same-day certificate</button>
+    <a class="btn ghost" href="learn.html#health">Staff training</a>
+  </div>
+
+  <section id="tab-home" class="stack">
+    <div class="grid g4" id="kpis"></div>
+    <div class="notice n-warn" id="queued" hidden></div>
+    <div class="card stack">
+      <h2>Notifications sent by this health centre</h2>
+      <div class="scroll-x"><table id="list"></table></div>
+    </div>
+  </section>
+
+  <section id="tab-birth" class="card stack" hidden style="max-width:760px">
+    <button class="btn gold" type="button" id="dictate">🎤 Dictate or photograph the birth note</button>
+    <div class="grid g2">
+      <label class="f">Mother's full name<input type="text" id="bm" value="Florence Ayuk"></label>
+      <label class="f">Parent's phone<input type="tel" id="bp" value="6XX XX XX 63"></label>
+      <label class="f">Date of birth<input type="date" id="bd" value="2026-11-12"></label>
+      <label class="f">Time<input type="text" id="bt" value="04:15"></label>
+      <label class="f">Sex of child<select id="bs"><option>Female</option><option>Male</option></select></label>
+      <label class="f">Weight (kg)<input type="number" step="0.1" id="bw" value="3.2"></label>
+      <label class="f">Parent's preferred language<select id="bl"><option value="pcm">Pidgin (voice)</option><option value="en">English</option><option value="fr">Français</option></select></label>
+      <label class="f">Father's name (if declared)<input type="text" id="bf" value="Thomas Ayuk"></label>
+    </div>
+    <div class="notice n-info">After sending, the parent gets an SMS or voice call to confirm the details. No visit to the council is needed for this step.</div>
+    <button class="btn" id="sendBirth">Send to Limbe II Council</button>
+    <div id="birthOut"></div>
+  </section>
+
+  <section id="tab-death" class="card stack" hidden style="max-width:760px">
+    <div class="grid g2">
+      <label class="f">Full name of the deceased<input type="text" id="dn" value="Martha Enanga"></label>
+      <label class="f">Age<input type="number" id="da" value="72"></label>
+      <label class="f">Date of death<input type="date" id="dd" value="2026-11-11"></label>
+      <label class="f">Family member to contact<input type="text" id="dk" value="Peter Enanga (son) · 6XX XX XX 81"></label>
+    </div>
+    <label class="btn ghost" style="align-self:flex-start">Photograph signed medical certificate<input type="file" accept="image/*" class="sr" id="dcert"></label>
+    <span class="small muted" id="dcertNote">No certificate attached yet.</span>
+    <div class="notice n-info">The family receives a respectful message with the next steps. Cause of death is not shared with the council beyond what the law requires.</div>
+    <button class="btn" id="sendDeath">Send to Limbe II Council</button>
+    <div id="deathOut"></div>
+  </section>
+
+  <section id="tab-ante" class="stack" hidden>
+    <div class="card stack" style="max-width:760px">
+      <p class="muted" style="margin:0">With her consent, the mother receives short messages before and after the birth explaining why and how to register the baby on time.</p>
+      <div class="grid g3">
+        <label class="f">Mother's name<input type="text" id="an" value="Clarisse Mokake"></label>
+        <label class="f">Expected due date<input type="date" id="ad" value="2027-01-20"></label>
+        <label class="f">Phone<input type="tel" id="ap" value="6XX XX XX 27"></label>
+        <label class="f">Contact by<select id="ac"><option>Voice call</option><option>SMS</option><option>WhatsApp</option></select></label>
+        <label class="f">Language<select id="al"><option>Pidgin</option><option>English</option><option>Français</option></select></label>
+      </div>
+      <label class="row small"><input type="checkbox" id="aconsent" checked style="width:20px;height:20px"> Mother agrees to receive registration reminders from Limbe II Council</label>
+      <button class="btn" id="enrol" style="align-self:flex-start">Enrol</button>
+    </div>
+    <div class="card stack"><h2>Enrolled mothers</h2><div class="scroll-x"><table id="antelist"></table></div></div>
+  </section>
+
+  <section id="tab-desk" class="stack" hidden>
+    <div class="notice n-info">Limbe II Council civil status desk inside the hospital (proposed, on the model of Yaoundé II at the Hôpital central). The parent confirms the details with the council clerk at the desk, the registrar on duty signs, and the family leaves with the birth certificate.</div>
+    <div class="card stack" style="max-width:760px">
+      <h2>Births waiting at the desk</h2>
+      <div class="scroll-x"><table id="desklist"></table></div>
+      <div id="deskOut"></div>
+    </div>
+  </section>
+</main>
+<script>
+(function(){
+  const A = App, C = A.CENTRES[0]; let queue = [];
+  const tabs = document.querySelectorAll('[data-tab]');
+  tabs.forEach(b => b.onclick = () => { tabs.forEach(x => x.classList.toggle('ghost', x !== b)); ['home','birth','death','ante','desk'].forEach(t => document.getElementById('tab-' + t).hidden = t !== b.dataset.tab); render(); });
+  const mine = () => A.state.requests.filter(r => r.source === C.name);
+  function render(){
+    const m = mine(), births = m.filter(r => r.type === 'Birth');
+    const k = [['Births notified this month', births.length + 36],['Registered', births.filter(r => !['Awaiting parent'].includes(r.status)).length + 30],['Parent not yet confirmed', births.filter(r => r.status === 'Awaiting parent').length],['Mothers enrolled for reminders', A.state.antenatal.length + 54]];
+    document.getElementById('kpis').innerHTML = k.map(x => '<div class="kpi"><div class="v">' + x[1] + '</div><div class="l">' + x[0] + '</div></div>').join('');
+    document.getElementById('list').innerHTML = '<thead><tr><th>Request</th><th>Name</th><th>Type</th><th>Sent</th><th>Status</th><th></th></tr></thead><tbody>' + m.map(r => '<tr><td>' + r.id + '</td><td>' + A.esc(r.name) + '</td><td>' + r.type + '</td><td>' + A.dateFmt(r.created) + '</td><td>' + A.badge(r.status) + '</td><td>' + (r.status === 'Awaiting parent' ? '<button class="btn sm ghost" onclick="App.toast(\'Calling ' + r.phone + ' (demo)\')">Call parent</button>' : '') + '</td></tr>').join('') + '</tbody>';
+    const q = document.getElementById('queued'); q.hidden = !queue.length; q.innerHTML = queue.length + ' notification(s) saved on this device, waiting for network. <button class="btn sm" id="sync">Send now</button>';
+    const s = document.getElementById('sync'); if (s) s.onclick = () => { document.getElementById('offline').checked = false; queue.forEach(r => A.addRequest(r)); queue = []; A.toast('Queued notifications sent'); render(); };
+    const waiting = mine().filter(r => r.type === 'Birth' && ['Awaiting parent','Awaiting registrar'].includes(r.status));
+    document.getElementById('desklist').innerHTML = waiting.length ? '<thead><tr><th>Request</th><th>Child</th><th>Mother</th><th>Status</th><th></th></tr></thead><tbody>' + waiting.map(r => '<tr><td>' + r.id + '</td><td>' + A.esc(r.name) + '</td><td>' + A.esc(r.parent) + '</td><td>' + A.badge(r.status) + '</td><td><button class="btn sm" data-desk="' + r.id + '">Confirm with parent and issue</button></td></tr>').join('') + '</tbody>' : '<tbody><tr><td class="muted">No births waiting. Notify a birth first, then come back here.</td></tr></tbody>';
+    document.querySelectorAll('[data-desk]').forEach(b => b.onclick = () => {
+      const id = b.dataset.desk, r = A.state.requests.find(x => x.id === id);
+      A.updateRequest(id, { status: 'Ready', paid: true, fee: 0, certNo: A.certPrefix(r.council) + '-2026-B-' + id.slice(-5) }, 'Parent confirmed details at the council desk in ' + C.name);
+      A.updateRequest(id, {}, 'Signed by the registrar on duty; certificate issued before the mother left the hospital (free within the legal period)');
+      document.getElementById('deskOut').innerHTML = '<div class="notice n-ok">Certificate issued for <strong>' + A.esc(r.name) + '</strong>. <a href="certificate.html?id=' + id + '">Print or show the certificate</a> · registered in the council register and included in the monthly transmission to BUNEC.</div>';
+      render();
+    });
+    document.getElementById('antelist').innerHTML = '<thead><tr><th>Mother</th><th>Due</th><th>Contact</th><th>Language</th><th>Next message</th></tr></thead><tbody>' +
+      [{ name:'Mary Njie', due:'2026-11-08', ch:'Voice call', lang:'Pidgin', next:'Delivered — registration reminder sent' }].concat(A.state.antenatal).map(a => '<tr><td>' + A.esc(a.name) + '</td><td>' + A.dateFmt(a.due) + '</td><td>' + a.ch + '</td><td>' + a.lang + '</td><td>' + A.esc(a.next) + '</td></tr>').join('') + '</tbody>';
+  }
+  function submitReq(r, out){
+    if (document.getElementById('offline').checked) { queue.push(r); document.getElementById(out).innerHTML = '<div class="notice n-warn">No network: saved on this device. It will be sent automatically when the connection returns.</div>'; return; }
+    A.addRequest(r);
+    document.getElementById(out).innerHTML = '<div class="notice n-ok">Sent to Limbe II Council as <strong>' + r.id + '</strong>.' + (r.status === 'Awaiting parent' ? ' The parent will receive an SMS. <a href="confirm.html?id=' + r.id + '">See the parent’s screen (demo)</a>' : ' <a href="staff.html?id=' + r.id + '">See it in the registrar’s queue (demo)</a>') + '</div>';
+  }
+  document.getElementById('dictate').onclick = () => { A.toast('Reading birth note… fields filled (demo)'); };
+  document.getElementById('sendBirth').onclick = () => {
+    const mother = document.getElementById('bm').value;
+    submitReq({ id: A.newId('BC'), council: 'limbe2', type: 'Birth', name: 'Baby of ' + mother, parent: mother, phone: document.getElementById('bp').value, source: C.name, channel: 'Health centre', lang: document.getElementById('bl').value, created: document.getElementById('bd').value, status: 'Awaiting parent', fee: 0, paid: false, ai: { level: 'ok', text: 'Notification complete. Waiting for the parent to confirm.' }, history: [A.h(A.TODAY, 'Birth notified by ' + C.name), A.h(A.TODAY, 'SMS sent to parent')] }, 'birthOut');
+  };
+  document.getElementById('dcert').onchange = () => { document.getElementById('dcertNote').textContent = '✓ Certificate attached and readable (demo).'; };
+  document.getElementById('sendDeath').onclick = () => {
+    const att = document.getElementById('dcertNote').textContent.startsWith('✓');
+    submitReq({ id: A.newId('DC'), council: 'limbe2', type: 'Death', name: document.getElementById('dn').value, parent: document.getElementById('dk').value.split('·')[0].trim(), phone: (document.getElementById('dk').value.split('·')[1] || '').trim(), source: C.name, channel: 'Health centre', lang: 'en', created: document.getElementById('dd').value, status: 'Awaiting registrar', fee: 2000, paid: false, ai: att ? { level: 'ok', text: 'Medical certificate attached and readable.' } : { level: 'warn', text: 'Medical certificate not attached yet.' }, history: [A.h(A.TODAY, 'Death notified by ' + C.name)] }, 'deathOut');
+  };
+  document.getElementById('enrol').onclick = () => {
+    if (!document.getElementById('aconsent').checked) { A.toast('Consent is required'); return; }
+    A.state.antenatal.push({ name: document.getElementById('an').value, due: document.getElementById('ad').value, ch: document.getElementById('ac').value, lang: document.getElementById('al').value, next: 'Welcome message today; reminder 2 weeks before due date' }); A.save();
+    A.toast('Enrolled'); render();
+  };
+  render();
+})();
+</script>
+</body>
+</html>

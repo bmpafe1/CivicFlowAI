@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Council administration</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+</head>
+<body data-portal="admin" data-page="admin">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:18px">
+  <div class="stack" style="gap:2px"><h1 style="font-size:24px">Council administration</h1><span class="small muted">Signed in: Secretary General (demo) · changes take effect without a programmer</span></div>
+  <div class="row" id="tabs"></div>
+
+  <section id="t-theme" class="stack" hidden>
+    <div class="notice n-info" id="scope"></div>
+    <div class="split">
+      <div class="main stack">
+        <div class="card stack">
+          <div class="row between"><h2>Colour theme</h2><span class="small" id="current"></span></div>
+          <p class="small muted" style="margin:0">One click applies the theme to this council's website, mobile app, WhatsApp links and staff screens. Other councils keep their own look.</p>
+          <div class="grid g3" id="themes"></div>
+        </div>
+        <div class="card stack">
+          <h2>Custom colours</h2>
+          <p class="small muted" style="margin:0">Use your council's own colours. The platform checks that text stays readable before you can apply them.</p>
+          <div class="row"><label class="f">Main colour<input type="color" id="cPrimary" value="#0B4F3C" style="width:90px;height:44px;padding:2px"></label><label class="f">Accent colour<input type="color" id="cAccent" value="#E8A317" style="width:90px;height:44px;padding:2px"></label><div id="cCheck" class="stack" style="gap:4px;flex:1 1 220px"></div></div>
+          <div class="row"><button class="btn" id="applyCustom">Apply custom colours</button><button class="btn ghost" id="resetTheme">Reset to default theme</button></div>
+        </div>
+        <div class="card stack">
+          <div class="row between"><h2>Menu layout</h2><span class="small" id="curLayout"></span></div>
+          <p class="small muted" style="margin:0">Choose where the main menu appears on this council's website and staff screens. On phones the menu always sits at the top, and the mobile app keeps its bottom tabs.</p>
+          <div class="grid g2">
+            <button class="layout-opt" data-lay="horizontal" type="button"><div class="sk" style="flex-direction:column"><div class="bar" style="height:20px"></div><div class="body"><div class="ln" style="width:70%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:55%"></div></div></div><strong>Horizontal</strong><span class="small muted">Menu across the top of the page (default)</span></button>
+            <button class="layout-opt" data-lay="vertical" type="button"><div class="sk"><div class="bar" style="width:46px"></div><div class="body"><div class="ln" style="width:70%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:55%"></div></div></div><strong>Vertical</strong><span class="small muted">Menu down the left side of the page</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="side card stack" style="align-items:center">
+        <h3 style="align-self:flex-start">Live preview: mobile app</h3>
+        <div class="phone-frame"><iframe id="pv" name="app" title="Mobile app preview" src="index.html?app=1"></iframe></div>
+        <a class="small" href="app.html">Open the mobile app demo</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="t-public" class="stack" hidden>
+    <div class="notice n-info" id="pubScope"></div>
+    <div class="row" id="ptype"></div>
+    <div class="split">
+      <div class="main card stack" id="pform"></div>
+      <div class="side card stack"><h3>Published by this council</h3><div id="plog" class="stack small"></div><a class="btn sm ghost" href="council.html" style="align-self:flex-start">View the public page</a></div>
+    </div>
+    <div class="card stack"><div class="row between"><h2>What citizens are saying (AI summary)</h2><span class="small muted" id="csn"></span></div><p class="small muted" style="margin:0">Comments on projects, budgets and consultations grouped by theme for the next council session. Read the original comments before quoting them.</p><div id="csum" class="grid g3"></div></div>
+  </section>
+
+  <section id="t-staff" class="stack">
+    <div class="card"><div class="scroll-x"><table id="staff"></table></div></div>
+    <div class="card stack" style="max-width:760px"><h2>Add a staff member</h2>
+      <div class="grid g3"><label class="f">Name<input type="text" id="sName" value="Clerk Ndolo"></label><label class="f">Role<select id="sRole"><option>Civil status clerk</option><option>Civil status registrar</option><option>Municipal treasurer</option><option>Business and tax officer</option><option>Field agent</option><option>Community development officer</option><option>Secondary centre officer</option></select></label><label class="f">Email<input type="text" id="sMail" value="clerk2@limbe2.example"></label></div>
+      <button class="btn sm" id="addStaff" style="align-self:flex-start">Send invitation (two-step sign-in required)</button></div>
+  </section>
+
+  <section id="t-audit" class="card stack" hidden><h2>Audit trail</h2><p class="small muted" style="margin:0">Every view, change, approval and signature is recorded, including actions prepared by the AI.</p><div class="scroll-x"><table id="audit"></table></div></section>
+
+  <section id="t-fees" class="card stack" hidden><h2>Services and official fees</h2><p class="small muted" style="margin:0">Changes appear immediately on the citizen website, app, USSD menu and assistant answers.</p><div class="scroll-x"><table id="fees"></table></div><button class="btn sm" id="saveFees" style="align-self:flex-start">Save and publish fees</button></section>
+
+  <section id="t-content" class="stack" hidden>
+    <div class="card stack" style="max-width:900px"><h2>Publish news in both languages</h2>
+      <div class="grid g2"><label class="f">Title (English)<input type="text" id="cEn" value="Free registration week, 1–5 December"></label><label class="f">Titre (français)<input type="text" id="cFr" value=""></label>
+      <label class="f">Text (English)<textarea id="cEnB">Late registration fees are waived for children under 12 from 1 to 5 December (demo).</textarea></label><label class="f">Texte (français)<textarea id="cFrB"></textarea></label></div>
+      <div id="cWarn"></div>
+      <div class="row"><button class="btn ghost sm" id="aiTr">Draft French with AI (staff must review)</button><button class="btn sm" id="pub">Publish to website, app, WhatsApp and SMS</button></div></div>
+  </section>
+
+  <section id="t-kb" class="card stack" hidden><h2>Assistant knowledge base</h2><p class="small muted" style="margin:0">The assistant only answers from approved entries. The AI suggests new entries from questions it could not answer; staff approve them.</p><div class="scroll-x"><table id="kb"></table></div></section>
+
+  <section id="t-sessions" class="grid g2" hidden>
+    <div class="card stack"><h2>Council sessions</h2><div id="sess" class="stack"></div></div>
+    <div class="card stack"><h2>Draft minutes with AI</h2><label class="f">Session notes<textarea id="notes" style="min-height:140px">28 Oct budget session. 31 councillors present. Budget 2027 adopted 29 for, 2 abstentions. Priority: civil status digitisation, health centre links, market lighting. Next session 15 Dec.</textarea></label><button class="btn sm" id="draft" style="align-self:flex-start">Draft bilingual minutes</button><div id="minutes"></div></div>
+  </section>
+
+  <section id="t-transp" class="card stack" hidden><h2>Transparency: decisions, orders and budgets</h2><div id="pubs" class="stack"></div><div class="row"><label class="btn ghost sm">Upload document (EN + FR)<input type="file" class="sr" id="up"></label></div></section>
+
+  <section id="t-data" class="grid g3" hidden>
+    <div class="card stack"><h3>Backups</h3><span class="badge b-ok" style="align-self:flex-start">Last backup today 02:00</span><span class="small muted">Daily encrypted backup, copy kept in a second location.</span></div>
+    <div class="card stack"><h3>Data protection</h3><span class="badge b-ok" style="align-self:flex-start">Authorisation file: in preparation</span><span class="small muted">Processing register and authorisation under Law No. 2024/017. Data hosted in Cameroon (planned).</span></div>
+    <div class="card stack"><h3>Citizen data requests</h3><span class="badge b-info" style="align-self:flex-start">2 open</span><span class="small muted">Requests to see, correct or delete personal data, answered within the legal time.</span></div>
+  </section>
+</main>
+<script>
+(function(){
+  const A = App, D = DATA; let tab = location.hash === '#theme' ? 'theme' : location.hash === '#public' ? 'public' : 'staff';
+  if (!A.state.staff) A.state.staff = D.staff.slice(); if (!A.state.kb) A.state.kb = D.kb.slice(); (A.state.kbGaps || []).forEach(g => A.state.kb.unshift({ q: g.q, a: 'AI draft: [answer to be written by the council]', status: 'From an unanswered question', by: 'Asked by a citizen (' + ({en:'English',fr:'French',pcm:'Pidgin'}[g.lang] || g.lang) + ')', date: g.date, fr: false, pcm: false })); A.state.kbGaps = []; A.save(); if (!A.state.publications) A.state.publications = D.publications.map(p => p[0]);
+  const T = [['theme','Look and feel'],['public','Public page'],['staff','Staff and roles'],['audit','Audit trail'],['fees','Services and fees'],['content','Bilingual content'],['kb','Assistant knowledge base'],['sessions','Council sessions'],['transp','Transparency'],['data','Backups and data protection']];
+  function tabs(){ document.getElementById('tabs').innerHTML = T.map(t => '<button class="btn sm ' + (t[0] === tab ? '' : 'ghost') + '" data-t="' + t[0] + '">' + t[1] + '</button>').join(''); document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); }); T.forEach(t => document.getElementById('t-' + t[0]).hidden = t[0] !== tab); }
+  function layoutUI(){
+    const c = A.council(), cur = A.layoutFor(c.id);
+    document.getElementById('curLayout').innerHTML = 'Current: <strong>' + (cur === 'vertical' ? 'Vertical' : 'Horizontal') + '</strong>';
+    document.querySelectorAll('[data-lay]').forEach(b => { b.classList.toggle('on', b.dataset.lay === cur); b.onclick = () => { if (b.dataset.lay === A.layoutFor(c.id)) return; A.setLayout(c.id, b.dataset.lay); A.toast('Menu layout changed for ' + c.name + ' only'); setTimeout(() => { location.hash = '#theme'; location.reload(); }, 600); }; });
+  }
+  function themeUI(){
+    layoutUI();
+    const c = A.council(), cur = A.themeFor(c.id);
+    document.getElementById('scope').innerHTML = 'You administer <strong>' + A.esc(c.name) + '</strong>. Theme changes apply to this council only.';
+    document.getElementById('current').innerHTML = 'Current: <span class="swatch" style="background:' + cur.primary + '"></span> <span class="swatch" style="background:' + cur.accent + '"></span> <strong>' + A.esc(cur.name) + '</strong>';
+    document.getElementById('themes').innerHTML = A.THEMES.map(t => '<button class="theme-card ' + (t.id === cur.id ? 'on' : '') + '" data-th="' + t.id + '"><div style="background:' + t.primary + ';border-radius:10px;padding:12px;color:#fff;display:flex;flex-direction:column;gap:8px"><strong style="font-size:13px">' + A.esc(c.name) + '</strong><span style="background:' + t.accent + ';color:' + A.mix(t.accent,'#000000',0.62) + ';border-radius:8px;padding:6px 10px;font-size:12px;font-weight:600;align-self:flex-start">Ask the assistant</span></div><strong class="small">' + t.name + '</strong><span class="small muted">' + (t.id === cur.id ? '✓ In use' : 'Click to apply') + '</span></button>').join('');
+    document.querySelectorAll('[data-th]').forEach(b => b.onclick = () => apply({ id: b.dataset.th }, A.THEMES.find(t => t.id === b.dataset.th).name));
+    check();
+  }
+  function check(){
+    const p = document.getElementById('cPrimary').value, a = document.getElementById('cAccent').value;
+    const r1 = A.contrast(p, '#FFFFFF'), r2 = A.contrast(a, A.mix(a,'#000000',0.62)), ok = r1 >= 4.5 && r2 >= 4.5;
+    document.getElementById('cCheck').innerHTML = '<span class="small">White text on main colour: <strong>' + r1.toFixed(1) + ':1</strong> ' + (r1 >= 4.5 ? '✓' : '✗ too light') + '</span><span class="small">Text on accent buttons: <strong>' + r2.toFixed(1) + ':1</strong> ' + (r2 >= 4.5 ? '✓' : '✗ adjust') + '</span>' + (ok ? '' : '<span class="badge b-risk" style="align-self:flex-start">Not readable enough: choose a darker main colour</span>');
+    document.getElementById('applyCustom').disabled = !ok;
+  }
+  function apply(t, name){
+    A.setTheme(A.state.council, t); A.applyTheme(A.state.council);
+    A.state.audit.unshift([A.TODAY + ' ' + new Date().toTimeString().slice(0,5), 'Secretary General', 'Changed theme to ' + name, A.council().name]); A.save();
+    try { document.getElementById('pv').contentWindow.location.reload(); } catch(e){}
+    A.toast('Theme applied to ' + A.council().name + ' on web and mobile'); themeUI();
+  }
+  document.getElementById('cPrimary').addEventListener('input', check); document.getElementById('cAccent').addEventListener('input', check);
+  document.getElementById('applyCustom').onclick = () => apply({ id: 'custom', primary: document.getElementById('cPrimary').value, accent: document.getElementById('cAccent').value }, 'custom colours');
+  document.getElementById('resetTheme').onclick = () => apply({ id: 'default' }, 'default theme');
+  let ptype = 'project';
+  const pubOf = () => { A.state.pub = A.state.pub || {}; return (A.state.pub[A.state.council] = A.state.pub[A.state.council] || {}); };
+  const F = {
+    project: ['New project', [['ten','Title (English)','text','Bota market toilets'],['tfr','Titre (français)','text',''],['den','Description (English)','area','Two public toilet blocks with water for traders.'],['dfr','Description (français)','area',''],['status','Status','sel:Planned,In progress,Completed','Planned'],['progress','Progress (%)','number','0'],['budget','Budget (FCFA)','number','9000000'],['place','Location','text','Bota market'],['funder','Funding','sel:Council budget 2027,FEICOM,FEICOM (application submitted),Council + FEICOM,Partners,Seed grant','Council budget 2027'],['start','Start','date','2027-01-15'],['end','End','date','2027-05-31']]],
+    update: ['Update an existing project', [['pid','Project','proj',''],['progress','New progress (%)','number','80'],['status','Status','sel:In progress,Completed,Planned','In progress'],['note','What changed (English)','text','52 of 60 lights installed'],['notefr','Ce qui a changé (français)','text','']]],
+    event: ['New event', [['ten','Title (English)','text','Health centre open day'],['tfr','Titre (français)','text',''],['date','Date','date','2026-12-10'],['time','Time','text','09:00'],['place','Place','text','Hillview Health Centre'],['cat','Category','sel:Community,Civil status,Training,Council,Jobs,Health','Health']]],
+    photo: ['Add photos to the gallery', [['file','Photo','file',''],['ten','Caption (English)','text','New lights at the fish market'],['tfr','Légende (français)','text',''],['date','Date taken','date','2026-11-11']]],
+    report: ['Publish a report', [['file','Document (PDF)','file',''],['ten','Title (English)','text','Projects progress report, October 2026'],['tfr','Titre (français)','text','']]],
+    notice: ['Post a notice', [['ten','Notice (English)','text','Council offices closed on 8 December'],['tfr','Avis (français)','text','']]]
+  };
+  const FRDRAFT = { 'Bota market toilets': 'Toilettes du marché de Bota', 'Two public toilet blocks with water for traders.': 'Deux blocs de toilettes publiques avec eau pour les commerçants.', 'Health centre open day': 'Journée portes ouvertes du centre de santé', 'New lights at the fish market': 'Nouveaux lampadaires au marché aux poissons', 'Projects progress report, October 2026': 'Rapport d\u2019avancement des projets, octobre 2026', 'Council offices closed on 8 December': 'Bureaux de la commune fermés le 8 décembre', '52 of 60 lights installed': '52 lampadaires sur 60 installés' };
+  function pubUI(){
+    document.getElementById('pubScope').innerHTML = 'You publish for <strong>' + A.esc(A.council().name) + '</strong>. Content appears on its public "Our council" page, in the mobile app and, for followers, by SMS. Both languages are required.';
+    document.getElementById('ptype').innerHTML = Object.entries(F).map(([k,v]) => '<button class="btn sm ' + (k === ptype ? '' : 'ghost') + '" data-pt="' + k + '">' + v[0] + '</button>').join('');
+    document.querySelectorAll('[data-pt]').forEach(b => b.onclick = () => { ptype = b.dataset.pt; pubUI(); });
+    const hubp = (DATA.hub[A.state.council] || { projects: [] }).projects.concat(pubOf().projects || []);
+    document.getElementById('pform').innerHTML = '<h2>' + F[ptype][0] + '</h2><div class="grid g2">' + F[ptype][1].map(f => {
+      const [id, lab, type, val] = f, full = type === 'area' ? ' style="grid-column:1/-1"' : '';
+      let ctl;
+      if (type === 'area') ctl = '<textarea id="pf_' + id + '">' + A.esc(val) + '</textarea>';
+      else if (type.startsWith('sel:')) ctl = '<select id="pf_' + id + '">' + type.slice(4).split(',').map(o => '<option' + (o === val ? ' selected' : '') + '>' + o + '</option>').join('') + '</select>';
+      else if (type === 'proj') ctl = '<select id="pf_' + id + '">' + hubp.map(p => '<option value="' + p.id + '">' + A.esc(p.title[0]) + ' (' + p.progress + '%)</option>').join('') + '</select>';
+      else if (type === 'file') ctl = '<input type="file" id="pf_' + id + '" accept="' + (ptype === 'photo' ? 'image/*' : '.pdf,application/pdf') + '">';
+      else ctl = '<input type="' + type + '" id="pf_' + id + '" value="' + A.esc(val) + '">';
+      return '<label class="f"' + full + '>' + lab + ctl + '</label>';
+    }).join('') + '</div><div id="pwarn"></div><div class="row"><button class="btn ghost sm" id="pai">Draft French with AI (review before publishing)</button><button class="btn" id="ppub">Publish</button></div>';
+    const v = id => (document.getElementById('pf_' + id) || {}).value || '';
+    const needFr = () => F[ptype][1].filter(f => /fr$/.test(f[0]) && f[0] !== 'pfr').some(f => !v(f[0]).trim());
+    const check = () => { const miss = needFr(); document.getElementById('pwarn').innerHTML = miss ? '<div class="notice n-warn small">French version missing. Both languages are required before publishing.</div>' : ''; document.getElementById('ppub').disabled = miss; };
+    document.querySelectorAll('#pform input,#pform textarea,#pform select').forEach(e => e.addEventListener('input', check)); check();
+    document.getElementById('pai').onclick = () => { F[ptype][1].filter(f => /fr$/.test(f[0])).forEach(f => { const en = v(f[0].replace(/fr$/,'en')) || v(f[0].replace(/fr$/,'')); document.getElementById('pf_' + f[0]).value = FRDRAFT[en] || '[FR] ' + en; }); check(); A.toast('AI French draft added: please review'); };
+    document.getElementById('ppub').onclick = async () => {
+      const P = pubOf(), now = A.TODAY;
+      if (ptype === 'project') { (P.projects = P.projects || []).unshift({ id: 'u' + Date.now(), title: [v('ten'), v('tfr')], desc: [v('den'), v('dfr')], status: v('status'), progress: +v('progress'), budget: +v('budget'), funder: v('funder'), start: v('start'), end: v('end'), place: v('place'), updates: [[now, 'Project published']] }); }
+      if (ptype === 'update') { P.overrides = P.overrides || {}; const id = v('pid'), o = P.overrides[id] || { updates: [] }; o.progress = +v('progress'); o.status = v('status'); o.updates = [[now, v('note') + ' / ' + v('notefr')]].concat(o.updates); P.overrides[id] = o; }
+      if (ptype === 'event') { (P.events = P.events || []).push({ id: 'ue' + Date.now(), title: [v('ten'), v('tfr')], date: v('date'), time: v('time'), place: v('place'), cat: v('cat') }); }
+      if (ptype === 'notice') { (P.notices = P.notices || []).unshift([v('ten'), v('tfr')]); }
+      if (ptype === 'report') { (P.reports = P.reports || []).unshift([v('ten'), v('tfr'), 'PDF · new']); }
+      if (ptype === 'photo') {
+        const file = document.getElementById('pf_file').files[0]; let img = null;
+        if (file) img = await new Promise(res => { const r = new FileReader(); r.onload = () => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'), w = 480, h = Math.round(im.height * w / im.width); c.width = w; c.height = h; c.getContext('2d').drawImage(im, 0, 0, w, h); res(c.toDataURL('image/jpeg', 0.7)); }; im.onerror = () => res(null); im.src = r.result; }; r.readAsDataURL(file); });
+        (P.gallery = P.gallery || []).unshift({ t: [v('ten'), v('tfr')], d: v('date'), scene: 'lights', img });
+      }
+      (P.log = P.log || []).unshift(now + ' · ' + F[ptype][0] + ': ' + (v('ten') || v('note') || '')); 
+      A.state.audit.unshift([now + ' ' + new Date().toTimeString().slice(0,5), 'Officer Etongo', 'Published on public page (EN/FR)', F[ptype][0]]);
+      try { A.save(); } catch (e) { A.toast('Storage full: photo too large for the demo'); }
+      const followers = ptype === 'update' && A.state.follows.includes(v('pid'));
+      A.toast('Published' + (followers ? ' · SMS sent to project followers' : '') + '. See it on the public page.'); pubUI();
+    };
+    document.getElementById('plog').innerHTML = (pubOf().log || []).map(l => '<div style="border-bottom:1px solid var(--line);padding:6px 0">' + A.esc(l) + '</div>').join('') || '<span class="muted">Nothing published yet in this demo.</span>';
+  }
+  function render(){
+    tabs(); themeUI(); pubUI();
+    document.getElementById('staff').innerHTML = '<thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Two-step sign-in</th><th>Status</th><th></th></tr></thead><tbody>' + A.state.staff.map((s,i) => '<tr><td>' + A.esc(s.name) + '</td><td>' + s.role + '</td><td class="small">' + s.email + '</td><td>' + (s.mfa ? '<span class="badge b-ok">On</span>' : '<span class="badge b-warn">Not set up</span>') + '</td><td>' + (s.active ? '<span class="badge b-ok">Active</span>' : '<span class="badge b-grey">Disabled</span>') + '</td><td>' + (s.active ? '<button class="btn sm ghost" data-dis="' + i + '">Disable</button>' : '') + '</td></tr>').join('') + '</tbody>';
+    document.querySelectorAll('[data-dis]').forEach(b => b.onclick = () => { const s = A.state.staff[+b.dataset.dis]; s.active = false; A.state.audit.unshift([A.TODAY + ' ' + new Date().toTimeString().slice(0,5), 'Secretary General', 'Disabled account', s.email]); A.save(); render(); });
+    document.getElementById('audit').innerHTML = '<thead><tr><th>When</th><th>Who</th><th>Action</th><th>On</th></tr></thead><tbody>' + A.state.audit.concat(A.requests().flatMap(r => r.history.filter(h => h.date === A.TODAY && /Signed|Returned|Paid|waived/.test(h.text)).map(h => [h.date, /Paid/.test(h.text) ? 'Citizen' : 'Registrar / treasurer', h.text, r.id]))).concat(D.audit).map(a => '<tr><td class="small">' + a[0] + '</td><td>' + A.esc(a[1]) + '</td><td>' + A.esc(a[2]) + '</td><td class="small">' + A.esc(a[3]) + '</td></tr>').join('') + '</tbody>';
+    document.getElementById('fees').innerHTML = '<thead><tr><th>Service (EN)</th><th>Service (FR)</th><th>Official fee (FCFA)</th></tr></thead><tbody>' + A.FEES.map(f => '<tr><td>' + A.esc(f.en) + '</td><td>' + A.esc(f.fr) + '</td><td><label class="sr" for="fee_' + f.id + '">Fee</label><input type="number" id="fee_' + f.id + '" value="' + f.amount + '" style="max-width:140px"> <span class="small muted">' + f.unit + '</span></td></tr>').join('') + '</tbody>';
+    document.getElementById('kb').innerHTML = '<thead><tr><th>Question</th><th>Approved answer</th><th>FR</th><th>Pidgin</th><th>Status</th><th></th></tr></thead><tbody>' + A.state.kb.map((k,i) => '<tr><td>' + A.esc(k.q) + '<div class="small muted">' + A.esc(k.by) + ' · ' + A.dateFmt(k.date) + '</div></td><td class="small">' + A.esc(k.a) + '</td><td>' + (k.fr ? '✓' : '—') + '</td><td>' + (k.pcm ? '✓' : '—') + '</td><td><span class="badge ' + (k.status === 'Approved' ? 'b-ok' : 'b-warn') + '">' + k.status + '</span></td><td>' + (k.status !== 'Approved' ? '<button class="btn sm" data-kb="' + i + '">Fill in and approve</button>' : '') + '</td></tr>').join('') + '</tbody>';
+    document.querySelectorAll('[data-kb]').forEach(b => b.onclick = () => { const k = A.state.kb[+b.dataset.kb]; const ans = prompt('Approved answer for: ' + k.q, k.a.replace(/[\[\]]/g,'')); if (ans === null) return; Object.assign(k, { a: ans, status: 'Approved', by: 'Registrar Mbua', date: A.TODAY, fr: true, pcm: true }); A.save(); A.toast('Approved. The assistant can now answer this in English, French and Pidgin.'); render(); });
+    { const own = A.state.complaints.filter(c => c.topic === 'Project feedback').length; document.getElementById('csn').textContent = (37 + own) + ' comments · last 30 days';
+      document.getElementById('csum').innerHTML = [['Mile 4 market lighting', 14 + own, 'Most welcome the lights; 9 ask that the fish section and the car park be included.'],['Bota drainage', 12, 'Residents report flooding at two junctions not in the plan and ask for the start date.'],['2027 budget consultation', 11, 'Requests for more spending on roads and youth training; 3 ask how the budget will be published.']].map(x => '<div class="card flat stack" style="background:var(--tint)"><strong class="small">' + x[0] + '</strong><span class="badge b-info" style="align-self:flex-start">' + x[1] + ' comments</span><span class="small">' + x[2] + '</span></div>').join(''); }
+    document.getElementById('sess').innerHTML = D.sessions.map(s => '<div class="row between" style="border:1px solid var(--line);border-radius:12px;padding:10px 14px"><span class="stack" style="gap:0"><strong class="small">' + s.title + '</strong><span class="small muted">' + A.dateFmt(s.date) + '</span></span><span class="badge b-info">' + s.status + '</span></div>').join('');
+    document.getElementById('pubs').innerHTML = A.state.publications.map(p => '<div class="row between" style="border:1px solid var(--line);border-radius:10px;padding:10px 12px"><span>' + A.esc(p) + '</span><span class="badge b-ok">Published · EN/FR</span></div>').join('');
+  }
+  document.getElementById('addStaff').onclick = () => { A.state.staff.push({ name: document.getElementById('sName').value, role: document.getElementById('sRole').value, email: document.getElementById('sMail').value, mfa: false, active: true }); A.state.audit.unshift([A.TODAY + ' ' + new Date().toTimeString().slice(0,5), 'Secretary General', 'Invited staff (' + document.getElementById('sRole').value + ')', document.getElementById('sMail').value]); A.save(); A.toast('Invitation sent'); render(); };
+  document.getElementById('saveFees').onclick = () => { A.state.fees = A.FEES.map(f => { f.amount = +document.getElementById('fee_' + f.id).value; return { id: f.id, amount: f.amount }; }); A.state.audit.unshift([A.TODAY + ' ' + new Date().toTimeString().slice(0,5), 'Secretary General', 'Updated official fees', 'Fee list']); A.save(); A.toast('Fees published everywhere'); render(); };
+  function checkTr(){ const miss = !document.getElementById('cFr').value.trim() || !document.getElementById('cFrB').value.trim(); document.getElementById('cWarn').innerHTML = miss ? '<div class="notice n-warn">French version missing. Both languages are required before publishing (Law No. 2019/019).</div>' : '<div class="notice n-ok">Both languages complete.</div>'; document.getElementById('pub').disabled = miss; }
+  ['cFr','cFrB','cEn','cEnB'].forEach(id => document.getElementById(id).addEventListener('input', checkTr));
+  document.getElementById('aiTr').onclick = () => { document.getElementById('cFr').value = 'Semaine de déclaration gratuite, du 1er au 5 décembre'; document.getElementById('cFrB').value = 'Les frais de déclaration tardive sont offerts aux enfants de moins de 12 ans du 1er au 5 décembre (démo).'; A.toast('AI draft added: please review before publishing'); checkTr(); };
+  document.getElementById('pub').onclick = () => { A.state.audit.unshift([A.TODAY + ' ' + new Date().toTimeString().slice(0,5), 'Officer Etongo', 'Published (EN/FR)', 'News: ' + document.getElementById('cEn').value]); A.save(); A.toast('Published to website, app, WhatsApp and SMS subscribers'); };
+  document.getElementById('draft').onclick = () => { document.getElementById('minutes').innerHTML = '<div class="grid g2"><div class="card flat stack" style="background:var(--tint)"><strong class="small">Minutes (draft)</strong><span class="small">Budget session of 28 October 2026. 31 councillors present. The 2027 budget was adopted (29 for, 2 abstentions). Priorities: civil status digitisation, links with health centres, market lighting. Next session: 15 December 2026.</span></div><div class="card flat stack" style="background:var(--tint)"><strong class="small">Procès-verbal (projet)</strong><span class="small">Session budgétaire du 28 octobre 2026. 31 conseillers présents. Le budget 2027 est adopté (29 pour, 2 abstentions). Priorités : numérisation de l’état civil, liens avec les centres de santé, éclairage des marchés. Prochaine session : 15 décembre 2026.</span></div></div><div class="notice n-warn small">Draft prepared by AI. The Secretary General must review and sign before publication.</div>'; };
+  document.getElementById('up').onchange = () => { A.state.publications.unshift('Mayor’s order: free registration week (uploaded ' + A.dateFmt(A.TODAY) + ')'); A.save(); A.toast('Published in both languages'); render(); };
+  render(); checkTr();
+})();
+</script>
+</body>
+</html>

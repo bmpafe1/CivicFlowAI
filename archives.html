@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Archives and records</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+<style>.pbar{background:var(--tint);border-radius:6px;height:10px;overflow:hidden;display:flex}.pbar i{display:block;height:100%}</style>
+</head>
+<body data-portal="archives" data-page="archives">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:18px">
+  <div class="stack" style="gap:2px"><h1 style="font-size:24px">Archives and records</h1><span class="small muted">Electronic document management · Clerk Ewane (demo) · originals stay in the registers; digital copies are sealed and logged</span></div>
+  <div class="row" id="tabs"></div>
+
+  <section id="t-overview" class="stack">
+    <div class="grid g4" id="kpis"></div>
+    <div class="card stack"><h2>Registers and archives</h2><div class="legend"><span><i style="background:var(--green)"></i>Scanned and verified</span><span><i style="background:var(--gold)"></i>Scanned, awaiting check</span><span><i style="background:var(--tint)"></i>Not scanned</span></div><div class="scroll-x"><table id="regs"></table></div></div>
+  </section>
+
+  <section id="t-tasks" class="stack" hidden>
+    <div class="notice n-info">Citizens whose record is indexed but not yet digitised appear here automatically after paying. Scan the page; the AI reads it; you verify; the certificate is issued and the citizen is notified.</div>
+    <div class="card" style="padding:0"><div class="scroll-x"><table id="tasks"></table></div></div>
+    <div class="card stack" id="taskWork" hidden></div>
+  </section>
+
+  <section id="t-scan" class="split" hidden>
+    <div class="main card stack">
+      <h2>Scan station</h2>
+      <p class="small muted" style="margin:0">Upload page images from the scanner (any image in this demo). Each page is stored, read by the AI and indexed automatically.</p>
+      <div class="grid g2"><label class="f">Register<select id="sReg"></select></label><label class="f">Pages<input type="file" id="sFiles" accept="image/*" multiple></label></div>
+      <div id="sOut" class="stack"></div>
+    </div>
+    <div class="side card stack"><h3>Today</h3><div id="sLog" class="small stack"></div></div>
+  </section>
+
+  <section id="t-search" class="stack" hidden>
+    <div class="card row"><label class="f" style="flex:2 1 260px">Search all archives (names, references, subjects)<input type="text" id="q" value="Ngole"></label><label class="f" style="flex:1 1 160px">Type<select id="qt"><option>All</option><option>Civil status</option><option>Deliberations</option><option>Building permits</option><option>Contracts</option></select></label></div>
+    <div class="card" style="padding:0"><div class="scroll-x"><table id="docs"></table></div></div>
+  </section>
+
+  <section id="t-ai" class="stack" hidden>
+    <div class="notice n-info">The AI continuously reads every new page and reports problems and priorities. Staff decide what to do.</div>
+    <div class="grid g2" id="insights"></div>
+  </section>
+
+  <section id="t-rules" class="grid g2" hidden>
+    <div class="card stack"><h2>Retention rules</h2><table><thead><tr><th>Document</th><th>Keep</th><th>Then</th></tr></thead><tbody>
+      <tr><td>Civil status registers</td><td>Permanent</td><td>Never destroyed; paper originals preserved</td></tr>
+      <tr><td>Council deliberations</td><td>Permanent</td><td>Transfer to historical archive after 30 years</td></tr>
+      <tr><td>Building permits</td><td>30 years</td><td>Review</td></tr><tr><td>Contracts and procurement</td><td>10 years after end</td><td>Review</td></tr>
+      <tr><td>Citizen request files</td><td>[to confirm]</td><td>Delete personal data per Law No. 2024/017</td></tr></tbody></table></div>
+    <div class="card stack"><h2>Who can see what</h2><table><thead><tr><th>Role</th><th>Access</th></tr></thead><tbody>
+      <tr><td>Registrar</td><td>All civil status records of this council; signs and seals</td></tr><tr><td>Clerk</td><td>Scan, index, verify; no issuing</td></tr>
+      <tr><td>Other councils</td><td>Match/no-match only, then a formal request</td></tr><tr><td>BUNEC</td><td>Records in the national format</td></tr>
+      <tr><td>AI assistant</td><td>Can check whether a record exists and is digitised; never shows its content before ID check and payment</td></tr><tr><td>Public</td><td>Deliberations and budgets only</td></tr></tbody></table>
+      <p class="small muted" style="margin:0">Every view, download and issue is logged in the audit trail. Each stored file carries a fingerprint so any alteration is detected.</p></div>
+  </section>
+</main>
+<script>
+(function(){
+  const A = App, D = DATA; let tab = A.param('tab') || 'overview';
+  const T = [['overview','Overview'],['tasks','Retrieval requests'],['scan','Scan station'],['search','Search archives'],['ai','AI analysis'],['rules','Retention and access']];
+  function tabs(){ document.getElementById('tabs').innerHTML = T.map(t => '<button class="btn sm ' + (t[0] === tab ? '' : 'ghost') + '" data-t="' + t[0] + '">' + t[1] + (t[0] === 'tasks' ? ' (' + tasks().length + ')' : '') + '</button>').join(''); document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); }); T.forEach(t => document.getElementById('t-' + t[0]).hidden = t[0] !== tab); }
+  const regs = () => D.registers.filter(r => r.council === A.state.council).map(r => { const extra = A.state.scans.filter(s => s.reg === r.name).length; return Object.assign({}, r, { scanned: Math.min(r.pages, r.scanned + extra), verified: Math.min(r.pages, r.verified + A.state.scans.filter(s => s.reg === r.name && s.ok).length) }); });
+  const tasks = () => A.requests().filter(r => r.retrieval && r.status === 'Retrieval in progress');
+  function overview(){
+    const R = regs(), P = R.reduce((s,r) => s + r.pages, 0), S = R.reduce((s,r) => s + r.scanned, 0), V = R.reduce((s,r) => s + r.verified, 0), I = R.reduce((s,r) => s + r.issues, 0);
+    document.getElementById('kpis').innerHTML = [['Pages scanned', P ? Math.round(S/P*100) + '%' : '—', S.toLocaleString('en-US') + ' of ' + P.toLocaleString('en-US')],['Pages verified', P ? Math.round(V/P*100) + '%' : '—', V.toLocaleString('en-US') + ' pages'],['Copies issued instantly this month', 63, 'from verified digital records'],['Pages flagged by AI', I, 'unreadable, damaged or missing']].map(k => '<div class="kpi"><div class="v">' + k[1] + '</div><div class="l">' + k[0] + '<br><span class="small">' + k[2] + '</span></div></div>').join('');
+    document.getElementById('regs').innerHTML = '<thead><tr><th>Register / series</th><th>Volumes</th><th>Pages</th><th style="min-width:220px">Progress</th><th>Instant issue</th><th>AI flags</th></tr></thead><tbody>' + R.map(r => '<tr><td><strong>' + r.name + '</strong></td><td>' + r.vols + '</td><td>' + r.pages.toLocaleString('en-US') + '</td><td><div class="pbar"><i style="width:' + (r.verified/r.pages*100) + '%;background:var(--green)"></i><i style="width:' + ((r.scanned-r.verified)/r.pages*100) + '%;background:var(--gold)"></i></div><span class="small muted">' + Math.round(r.scanned/r.pages*100) + '% scanned · ' + Math.round(r.verified/r.pages*100) + '% verified</span></td><td>' + (r.verified/r.pages > 0.9 ? '<span class="badge b-ok">Yes</span>' : r.verified ? '<span class="badge b-warn">Partly</span>' : '<span class="badge b-grey">Not yet</span>') + '</td><td>' + (r.issues ? '<span class="badge b-warn">' + r.issues + '</span>' : '—') + '</td></tr>').join('') + '</tbody>';
+  }
+  function taskList(){
+    const L = tasks();
+    document.getElementById('tasks').innerHTML = '<thead><tr><th>Request</th><th>Citizen record</th><th>Register reference</th><th>Paid</th><th>Due</th><th></th></tr></thead><tbody>' + (L.length ? L.map(r => '<tr><td>' + r.id + '</td><td>' + A.esc(r.name) + '</td><td class="small">' + A.esc(r.recordRef || '—') + '</td><td>' + A.fmt(r.fee) + '</td><td>' + A.dateFmt('2026-11-17') + '</td><td><button class="btn sm" data-tk="' + r.id + '">Scan and issue</button></td></tr>').join('') : '<tr><td colspan="6" class="muted">No retrieval requests. Try "Find my certificate" as a citizen with Clovis Ayuk, 2004.</td></tr>') + '</tbody>';
+    document.querySelectorAll('[data-tk]').forEach(b => b.onclick = () => work(A.findReq(b.dataset.tk)));
+  }
+  function work(r){
+    const w = document.getElementById('taskWork'); w.hidden = false;
+    w.innerHTML = '<h2>' + r.id + ' · ' + A.esc(r.name) + '</h2><p class="small muted" style="margin:0">1. Retrieve ' + A.esc(r.recordRef) + ' from the archive room. 2. Scan the page. 3. Check the AI reading. 4. Issue.</p><label class="btn ghost" style="align-self:flex-start">Upload scanned page<input type="file" accept="image/*" class="sr" id="tkFile"></label><div id="tkOut"></div>';
+    document.getElementById('tkFile').onchange = () => {
+      document.getElementById('tkOut').innerHTML = '<div class="notice n-info">AI reading the handwritten entry…</div>';
+      setTimeout(() => {
+        document.getElementById('tkOut').innerHTML = '<table><thead><tr><th>Field</th><th>AI reading</th><th>Confidence</th></tr></thead><tbody>' + [['Name','Clovis Ayuk',96],['Date of birth','11 Feb 2004',91],['Mother','Mary Ayuk',94],['Father','Thomas Ayuk',88],['Place','Limbe',97]].map(f => '<tr><td>' + f[0] + '</td><td><input type="text" value="' + f[1] + '" aria-label="' + f[0] + '"></td><td><span class="badge ' + (f[2] > 90 ? 'b-ok' : 'b-warn') + '">' + f[2] + '%</span></td></tr>').join('') + '</tbody></table><div class="notice n-ok small">Matches the citizen’s request (name, year, mother). Page quality: good.</div><button class="btn" id="tkIssue">Verified: store, index and issue</button>';
+        document.getElementById('tkIssue').onclick = () => {
+          A.updateRequest(r.id, { status: 'Ready', certNo: A.certPrefix(r.council) + '-2026-C-' + r.id.slice(-5) }, 'Register page scanned, read by AI, verified by clerk; certificate issued and citizen notified by SMS');
+          if (r.recordId) { A.state.recDigitised = (A.state.recDigitised || []).concat([r.recordId]); }
+          A.state.scans.push({ reg: 'Births 2001–2006 (crisis-damaged)', ok: true, d: A.TODAY }); A.save();
+          A.toast('Issued. The citizen can download it now; the record is now instantly available for future requests.'); w.hidden = true; render();
+        };
+      }, 900);
+    };
+  }
+  function scanUI(){
+    document.getElementById('sReg').innerHTML = regs().map(r => '<option>' + r.name + '</option>').join('');
+    document.getElementById('sLog').innerHTML = A.state.scans.length ? A.state.scans.slice(-8).reverse().map(s => '<div style="border-bottom:1px solid var(--line);padding:6px 0">' + s.reg + (s.ok ? ' · verified' : ' · awaiting check') + '</div>').join('') : '<span class="muted">No pages scanned yet in this demo.</span>';
+  }
+  document.getElementById('sFiles').onchange = e => {
+    const n = e.target.files.length, reg = document.getElementById('sReg').value, out = document.getElementById('sOut');
+    out.innerHTML = '<div class="notice n-info">Reading ' + n + ' page(s)…</div>';
+    setTimeout(() => {
+      for (let k = 0; k < n; k++) A.state.scans.push({ reg, ok: false, d: A.TODAY }); A.save();
+      out.innerHTML = '<div class="notice n-ok">' + n + ' page(s) stored and fingerprinted. AI extracted ' + (n * 4) + ' entries: ' + (n * 3) + ' high confidence, ' + n + ' need a check.</div><table><thead><tr><th>Entry</th><th>AI reading</th><th>Confidence</th><th></th></tr></thead><tbody>' + [['No. 134','Ebude Grace · 14 Feb 2004 · mother Ebude Rose',94],['No. 135','Nkongho Peter · 15 Feb 2004 · mother Nkongho Alice',92],['No. 136','M?ukam Rita · 16 Feb 2004 · mother illegible',58]].map((x,i) => '<tr><td>' + x[0] + '</td><td>' + x[1] + '</td><td><span class="badge ' + (x[2] > 85 ? 'b-ok' : 'b-risk') + '">' + x[2] + '%</span></td><td><button class="btn sm ' + (x[2] > 85 ? '' : 'ghost') + '" onclick="this.outerHTML=\'<span class=&quot;badge b-ok&quot;>Confirmed</span>\'">' + (x[2] > 85 ? 'Confirm' : 'Correct and confirm') + '</button></td></tr>').join('') + '</tbody></table>';
+      scanUI(); overview();
+    }, 1000);
+  };
+  function docs(){
+    const q = document.getElementById('q').value.toLowerCase(), t = document.getElementById('qt').value;
+    const ALL = D.records.filter(r => r.council === A.state.council).map(r => ['Civil status', r.type + ' · ' + r.name, r.ref, (r.digitised || (A.state.recDigitised||[]).includes(r.id)) ? 'Digital + paper' : 'Paper only (indexed)', 'Registrar, clerk'])
+      .concat([['Deliberations','Budget session 2027, minutes','Deliberations 2026 · no. 14','Digital + paper','Public'],['Deliberations','Market fees order','Deliberations 2026 · no. 11','Digital + paper','Public'],['Building permits','Permit 2019-044, Ngole residence, Bota','Permits 2019 · file 44','Digital','Planning officer'],['Contracts','Mile 4 market lighting contract','Contracts 2026 · no. 7','Digital','Secretary General, treasurer']]);
+    const L = ALL.filter(d => (t === 'All' || d[0] === t) && (!q || d.join(' ').toLowerCase().includes(q)));
+    document.getElementById('docs').innerHTML = '<thead><tr><th>Type</th><th>Document</th><th>Reference</th><th>Form</th><th>Access</th></tr></thead><tbody>' + (L.length ? L.map(d => '<tr><td>' + d[0] + '</td><td><strong>' + A.esc(d[1]) + '</strong></td><td class="small">' + d[2] + '</td><td><span class="badge ' + (d[3].startsWith('Paper') ? 'b-warn' : 'b-ok') + '">' + d[3] + '</span></td><td class="small">' + d[4] + '</td></tr>').join('') : '<tr><td colspan="5" class="muted">No documents found.</td></tr>') + '</tbody>';
+  }
+  function insights(){
+    const I = [['Scan these first','38 citizen searches this month matched entries in "Births 2001–2006 (crisis-damaged)", which is only 20% scanned. Digitising it next would turn most of these into instant downloads.','b-warn'],
+      ['Missing pages','Births 2011–2015, volume 4: pages 88–91 are missing from the sequence. Check the paper volume.','b-risk'],
+      ['Damaged volumes','Volumes 2 and 5 of 2001–2006 show water damage on 41 pages. Recommend conservation before further handling.','b-risk'],
+      ['Possible duplicates','6 pairs of entries look like the same child registered twice (same mother, dates within 30 days). Listed for the registrar.','b-warn'],
+      ['Late registration trend','Late registrations recorded in the registers fell from 34% (2007) to 19% (2015).','b-info'],
+      ['Spelling variants','The index links 212 name variants (e.g. Ndive / Ndivé, Ebot / Ebot-Ashu) so searches still find records.','b-ok']];
+    document.getElementById('insights').innerHTML = I.map(x => '<div class="card stack"><span class="badge ' + x[2] + '" style="align-self:flex-start">' + x[0] + '</span><p style="margin:0">' + x[1] + '</p></div>').join('');
+  }
+  document.getElementById('q').addEventListener('input', docs); document.getElementById('qt').addEventListener('change', docs);
+  function render(){ tabs(); overview(); taskList(); scanUI(); docs(); insights(); }
+  render();
+})();
+</script>
+</body>
+</html>

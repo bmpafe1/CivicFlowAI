@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Track a request</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="citizen" data-page="track">
+<div id="shell"></div>
+<main class="wrap" style="max-width:820px">
+  <div class="stack" style="gap:18px">
+    <h1 data-i18n="track.title"></h1>
+    <form id="f" class="card row">
+      <label class="f" style="flex:1 1 260px"><span data-i18n="track.label"></span><input id="rid" type="text" placeholder="e.g. BC-2026-01482"></label>
+      <button class="btn" style="align-self:flex-end" data-i18n="track.go"></button>
+    </form>
+    <div id="samples" class="small muted"></div>
+    <div id="out"></div>
+  </div>
+</main>
+<script>
+(function(){
+  const A = App;
+  function render(id){
+    const out = document.getElementById('out'), fr = A.state.lang === 'fr';
+    if (!id) { out.innerHTML = ''; return; }
+    const r = A.findReq(id);
+    if (!r) { out.innerHTML = '<div class="notice n-risk">' + (fr?'Aucune demande trouvée pour ':'No request found for ') + A.esc(id) + '.</div>'; return; }
+    const STEPS = { 'Birth': ['Notified','Confirmed by parent','Checked by council','Signed by registrar','Ready'], 'Late birth': ['Submitted','Documents checked','Signed by registrar','Paid','Ready'] };
+    let action = '';
+    if (r.status === 'Awaiting parent') action = '<a class="btn" href="confirm.html?id=' + r.id + '">' + (fr?'Confirmer les informations':'Confirm the details') + '</a>';
+    if (r.status === 'Awaiting payment' || (r.status === 'Ready' && !r.paid && r.fee > 0)) action = '<a class="btn" href="pay.html?id=' + r.id + '">' + (fr?'Payer ':'Pay ') + A.fmt(r.fee) + '</a>';
+    if (r.status === 'Ready' && (r.paid || r.fee === 0)) action = '<a class="btn" href="certificate.html?id=' + r.id + '">' + (fr?'Voir l’acte et le reçu':'View certificate and receipt') + '</a>';
+    if (r.status === 'Returned') action = '<a class="btn" href="assistant.html?q=' + encodeURIComponent('Where is my request ' + r.id) + '">' + (fr?'Corriger avec l’assistant':'Fix it with the assistant') + '</a>';
+    out.innerHTML =
+      '<div class="card stack">' +
+        '<div class="row between"><div class="stack" style="gap:2px"><span class="small muted">' + r.id + ' · ' + A.esc(r.type) + '</span><h2>' + A.esc(r.name) + '</h2></div>' + A.badge(r.status) + '</div>' +
+        '<div class="hero" style="padding:18px;border-radius:14px"><span class="small" style="color:#CFE3D9">' + (fr?'En clair':'In plain words') + '</span><strong style="font-size:17px">' + A.esc(A.plain(r)) + '</strong></div>' +
+        (r.status === 'Returned' ? '<div class="notice n-warn">' + A.esc(r.ai.text) + '</div>' : '') +
+        '<h3>' + (fr?'Historique':'History') + '</h3><div class="timeline">' +
+          r.history.map((x,i) => '<div class="tl done"><div class="dot"><i></i>' + '<b></b>' + '</div><div class="txt"><strong style="font-size:14px">' + A.esc(x.text) + '</strong><div class="small muted">' + A.dateFmt(x.date) + '</div></div></div>').join('') +
+          '<div class="tl now"><div class="dot"><i></i></div><div class="txt"><strong style="font-size:14px">' + (fr?'Maintenant : ':'Now: ') + A.esc(fr ? ({'Ready':'Prêt','Collected':'Terminé'}[r.status]||'En cours') : r.status) + '</strong></div></div>' +
+        '</div>' +
+        '<div class="row">' + action + '<a class="btn ghost" href="assistant.html?q=' + encodeURIComponent('Where is my request ' + r.id) + '">' + (fr?'Poser une question':'Ask about this request') + '</a></div>' +
+        '<p class="small muted" style="margin:0">' + (fr?'Les mises à jour sont aussi envoyées par SMS au ':'Updates are also sent by SMS to ') + A.esc(r.phone) + '.</p>' +
+      '</div>';
+  }
+  function samples(){
+    const fr = A.state.lang === 'fr';
+    document.getElementById('samples').innerHTML = (fr?'Exemples : ':'Try: ') + A.requests().slice(0,6).map(r => '<a href="?id=' + r.id + '">' + r.id + '</a>').join(' · ');
+  }
+  document.getElementById('f').addEventListener('submit', e => { e.preventDefault(); const v = document.getElementById('rid').value; history.replaceState(null,'','?id=' + encodeURIComponent(v)); render(v); });
+  const id = A.param('id'); if (id) document.getElementById('rid').value = id;
+  samples(); render(id); document.addEventListener('langchange', () => { samples(); render(document.getElementById('rid').value); });
+})();
+</script>
+</body>
+</html>

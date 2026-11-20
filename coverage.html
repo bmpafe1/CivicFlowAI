@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Use case coverage</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="coverage" data-page="coverage">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <div class="stack" style="gap:4px"><h1>Use case coverage</h1><p class="muted" style="margin:0">Every use case from "Council Platform Use Cases – For Validation by Limbe II Council", plus the AI features, the original 2022 system and the 11 November meeting, linked to the screen that demonstrates it.</p></div>
+  <div class="grid g4" id="kpis"></div>
+  <div class="card row"><label class="f" style="flex:1 1 240px">Filter<input type="text" id="q" placeholder="e.g. rider, AI, PAY-, training"></label></div>
+  <div id="groups" class="stack"></div>
+</main>
+<script>
+(function(){
+  const A = App;
+  const G = [
+    ['1. Civil status', [
+      ['CS-01','Notify a birth from a health centre','clinic.html','Health centre › Notify a birth'],['CS-02','Confirm a birth declaration','confirm.html','Parent confirmation screen, Listen button'],['CS-03','Declare a home birth','apply.html?s=home','Apply › Home birth (witnesses)'],
+      ['CS-04','Validate and sign a birth record','staff.html','Registrar › Approve and sign'],['CS-05','Issue a birth certificate','certificate.html','QR certificate and receipt'],['CS-06','Register a birth late','late-registration.html','4-step guided form'],
+      ['CS-07','Remind parents to register','clinic.html','Enrol expectant mother; reminders also on WhatsApp page'],['CS-08','Give notice of an intended marriage','apply.html?s=marriage','Apply › Marriage: notice and ceremony'],['CS-09','Register a marriage and issue the certificate','staff.html','Approve the marriage request, then certificate'],
+      ['CS-10','Notify a death from a health facility','clinic.html','Health centre › Notify a death'],['CS-11','Declare a death and get the certificate','apply.html?s=death','Apply › Declare a death (family)'],['CS-12','Request a certified copy','find.html','Find my certificate'],
+      ['CS-13','Replace a lost certificate from another town','find.html','Find my certificate (AI search, instant download)'],['CS-14','Reconstitute a destroyed or missing record','apply.html?s=recon','Apply › Rebuild a record'],['CS-15','Correct an error on a record','apply.html?s=correct','Apply › Correct an error'],
+      ['CS-16','Verify a certificate’s authenticity','verify.html','Verify page (also field agent app)'],['CS-17','Digitise the old registers','archives.html','Archives › Scan station, overview'],['CS-18','Search civil status records','staff.html','Registrar › Records and other councils'],
+      ['CS-19','Submit records from a secondary centre','staff.html','Registrar › Secondary centres'],['CS-20','Share records and statistics with BUNEC','staff.html','Registrar › Records › Send to BUNEC; platform log'],['CS-21','Issue the birth certificate before leaving hospital','clinic.html','Health centre › Council desk: same-day certificate'],['CS-22','Obtain a burial authorisation','apply.html?s=burial','Apply › Burial authorisation; assistant: “burial permit”']]],
+    ['2. Business licensing and small-operator tax', [
+      ['BT-01','Learn how to start a business','business.html','Start-up guide by activity'],['BT-02','Find out which tax applies','services.html#business','Three-question tax checker'],['BT-03','Apply for a business licence or permit','business.html','Apply for council registration'],
+      ['BT-04','Renew a licence','business.html','Renew: try OP-0389'],['BT-05','Pay small-operator tax','business.html','Renew/pay, then mobile money'],['BT-06','Register as a moto-taxi rider','rider.html','Register as a new rider'],
+      ['BT-07','Buy the required rider jacket','rider.html','Buy the jacket online'],['BT-08','Get a digital rider badge','rider.html','Badge with QR (MR-0937)'],['BT-09','Pay market and stall fees','business.html','Pay market or stall fees'],
+      ['BT-10','Refer a large business','business.html','Referral to national tax authority (tax checker, over 10M)'],['BT-11','Receive payment reminders','treasury.html','Send reminders; reminder opt-in on Business page'],['BT-12','Verify payment in the field','agent.html','Field agent app'],
+      ['BT-13','Keep a register of operators','treasury.html','Register of small operators'],['BT-14','Dispute an assessment or charge','business.html','Dispute a charge']]],
+    ['3. AI assistant', [
+      ['AI-01','Ask any question about council services','assistant.html','Assistant (answers from knowledge base)'],['AI-02','Be guided through a procedure','assistant.html?q=late registration','Assistant › Start the request'],['AI-03','Fill in a request by conversation','late-registration.html','Question-by-question form started by the assistant'],
+      ['AI-04','Use the assistant by voice','assistant.html?voice=1','Mic + Listen; WhatsApp voice note; USSD call-back'],['AI-05','Use the assistant in Pidgin or a local language','assistant.html','Write or speak Pidgin'],['AI-06','Use the assistant on WhatsApp','whatsapp.html','WhatsApp channel'],
+      ['AI-07','Read a photographed document','late-registration.html','Step 2: add a photo'],['AI-08','Check request status in plain words','assistant.html?q=Where is my request LR-2026-00207','Ask with a request number'],['AI-09','Talk to a staff member','assistant.html','Talk to a council staff member'],
+      ['AI-10','Pre-check an application','staff.html','AI pre-check in the work queue'],['AI-11','Ask about internal procedures','staff.html','Registrar › AI help desk'],['AI-12','Draft letters and replies','staff.html','AI help desk › Draft a letter; complaint replies'],
+      ['AI-13','Draft council session minutes','admin.html','Administration › Council sessions'],['AI-14','Dictate a birth notification','clinic.html','Dictate or photograph the birth note'],['AI-15','Ask questions about council data','dashboard.html','Ask a question about your data'],
+      ['AI-16','See what citizens ask about most','dashboard.html','What citizens ask most; KB suggestions in Administration'],['AI-17','Recover records after displacement','assistant.html','Assistant: “Our village burnt and we lost our papers”'],['AI-18','Detect duplicate or altered records','staff.html','Registrar queue › Paul Ekema (duplicate at Buea Council)'],['AI-19','Learn from unanswered questions','admin.html','Ask the assistant something it cannot answer, then Administration › Assistant knowledge'],['AI-20','Training tutor for staff','learn.html#health','Learn › Health centre staff › Staff tutor'],['AI-21','Check that a message is from the council','verify.html#message','Verify › Is this message really from the council?'],['AI-22','Prepare the monthly BUNEC report','staff.html','Registrar › Records › Draft monthly report with AI'],['AI-23','Life-event guidance','assistant.html','Assistant: “My father died yesterday”'],['AI-24','Flag unusual payments','treasury.html','Treasury › AI: unusual payments to check'],['AI-25','Summarise public comments','admin.html','Administration › Public page › What citizens are saying'],['AI-26','Assisted use through community relays','agent.html','Field agent › Help a resident without a phone'],['AI-27','Help with personal data requests','assistant.html','Assistant: “What data do you have about me?” › My account'],['AI-28','Draft translations of documents','staff.html','Registrar › Staff help › Translate a birth certificate']]],
+    ['4. Payments, receipts and anti-extortion', [
+      ['PAY-01','Pay a fee by mobile money','pay.html','MTN MoMo / Orange Money, any 4-digit PIN'],['PAY-02','Pay in cash at the council','pay.html','"At the council cashier" option'],['PAY-03','Receive a QR receipt','certificate.html','Receipt with QR'],
+      ['PAY-04','Check the official fee','services.html','Official fees list'],['PAY-05','Report an illegal demand for money','rider.html#report','Anonymous report'],['PAY-06','Grant a fee exemption','treasury.html','Fee exemptions'],
+      ['PAY-07','Reconcile daily payments','treasury.html','Daily reconciliation'],['PAY-08','Refund a payment','treasury.html','Refunds'],['PAY-09','View revenue reports','treasury.html','Revenue report; dashboard']]],
+    ['5. Information, complaints and public education', [
+      ['INF-01','Find council services and contacts','index.html','Home and Services'],['INF-02','Choose a language','account.html','EN/FR on every page; message language in My account'],['INF-03','Read council announcements','news.html','News'],
+      ['INF-04','Watch short guides and videos','learn.html','Learning centre › Videos and audio guides; short courses'],['INF-05','Run sensitisation campaigns','dashboard.html','Send a sensitisation campaign'],['INF-06','Train health centre staff','learn.html#health','For health workers (linked from clinic)'],
+      ['INF-07','Submit a complaint or suggestion','complaints.html','Complaints'],['INF-08','Track and answer complaints','staff.html','Registrar › Complaints'],['INF-09','Rate a service','complaints.html','Rate a service you used'],
+      ['INF-10','Find job and training opportunities','learn.html#training','Training, online learning, careers; jobs on News'],['INF-11','Book an appointment','account.html','Book an appointment']]],
+    ['6. Council administration and management', [
+      ['ADM-01','Manage staff accounts and roles','admin.html','Staff and roles'],['ADM-02','Sign in securely','admin.html','Two-step sign-in status; citizen phone + SMS code'],['ADM-03','Review the audit trail','admin.html','Audit trail'],
+      ['ADM-04','Manage the work queue','staff.html','Work queue and filters'],['ADM-05','Set services, fees and documents','admin.html','Services and fees (changes apply everywhere)'],['ADM-06','Publish content in both languages','admin.html','Bilingual content (blocks publishing without French)'],
+      ['ADM-07','Maintain the assistant’s knowledge base','admin.html','Assistant knowledge base'],['ADM-08','View the council dashboard','dashboard.html','Management dashboard'],['ADM-09','Publish council decisions and budgets','news.html','Council decisions and budgets; Administration › Transparency'],
+      ['ADM-10','Manage council sessions','admin.html','Council sessions'],['ADM-11','Work when the connection drops','clinic.html','Simulate no network'],['ADM-12','Back up and protect data','admin.html','Backups and data protection']]],
+    ['7. Other councils and national partners', [
+      ['NAT-01','Add a new council to the platform','platform.html','Add a council'],['NAT-02','Request a record from another council','staff.html','Records › search all councils › request copy'],['NAT-03','Exchange data with existing council systems','platform.html','National connections; exchange log'],
+      ['NAT-04','Send data to BUNEC','staff.html','Send records to BUNEC'],['NAT-05','View regional and national statistics','platform.html','Regional view (anonymised)'],['NAT-06','Refer cases to national bodies','business.html','Large-business referral'],['NAT-07','Work alongside BUNEC\'s national system','platform.html','Civil status register per council; monthly transmission to BUNEC'],['NAT-08','Show FEICOM and partner funding','council.html','Projects show their funder; Administration › New project › Funding']]],
+    ['From the original 2022 system and the 11 November meeting', [
+      ['OLD','Online learning videos by category','learn.html#training','Online learning'],['OLD','Recommended course sites (Udemy, GeeksforGeeks)','learn.html#training','Recommended sites'],['OLD','Onsite training and career meet-ups','learn.html#training','Book a place'],
+      ['MTG','Birth, marriage and death as one package','apply.html','Apply page'],['MTG','Rider jackets without the single-window queue','rider.html','Buy the jacket online'],['MTG','Hospital sensitisation for expectant mothers','clinic.html','Enrol expectant mother; campaigns'],
+      ['MTG','University of Buea training and onboarding','learn.html#training','Computer skills session'],['MTG','Avoid parallel systems: Limbe I and Buea','platform.html','Connected systems'],['MTG','Pilot that scales to other councils','platform.html','Council selector; add a council'],
+      ['NEW','Public council page: projects with status and progress, follow a project, project feedback','council.html#projects','Our council › Projects'],
+      ['NEW','Public council page: upcoming events with calendar download and SMS reminder','council.html#events','Our council › Upcoming events'],
+      ['NEW','Public council page: news, photo gallery, reports, notices, contacts','council.html#gallery','Our council'],
+      ['NEW','Council staff publish projects, updates, events, photos, reports and notices (EN/FR)','admin.html#public','Administration › Public page'],
+      ['NEW','AI search: certificate digitised, pay and download immediately (auto-issue)','find.html','Find my certificate: try Marie Ngole 2009'],
+      ['NEW','AI search: record indexed but not digitised; manual retrieval with expected time','find.html','Find my certificate: try Clovis Ayuk 2004'],
+      ['NEW','AI search: not in this council, similar records at other councils (privacy-safe)','find.html','Find my certificate: try Mary Ebot Ashu 1998'],
+      ['NEW','Menu layout per council: horizontal or vertical, chosen by the council administrator; phones and the app keep their own menus','admin.html#theme','Administration › Look and feel › Menu layout'],
+      ['NEW','How it works: technical architecture, AI models, human checks and pass marks (for the Cities Deliver video)','architecture.html','How it works'],
+      ['NEW','Electronic document management: registers progress, scan station, AI reading, retrieval tasks, archive search, AI analysis, retention and access','archives.html','Archives view'],
+      ['NEW','Each council chooses its own colour theme, also on the mobile app','admin.html#theme','Administration › Look and feel; Mobile app view']]]
+  ];
+  const all = G.flatMap(g => g[1]);
+  document.getElementById('kpis').innerHTML = [['Use cases in sections 1–7 of the validation document', 104],['Demonstrated in the prototype', all.filter(x => !/OLD|MTG|NEW/.test(x[0])).length],['Extra items (original system, meeting, new requests)', all.filter(x => /OLD|MTG|NEW/.test(x[0])).length],['Screens', 32]].map(k => '<div class="kpi"><div class="v">' + k[1] + '</div><div class="l">' + k[0] + '</div></div>').join('');
+  function render(){
+    const q = document.getElementById('q').value.toLowerCase();
+    document.getElementById('groups').innerHTML = G.map(g => { const rows = g[1].filter(x => !q || x.join(' ').toLowerCase().includes(q)); if (!rows.length) return ''; return '<section class="card stack"><h2>' + g[0] + '</h2><div class="scroll-x"><table><thead><tr><th>ID</th><th>Use case</th><th>Where to see it</th><th>Status</th></tr></thead><tbody>' + rows.map(x => '<tr><td class="small">' + x[0] + '</td><td>' + A.esc(x[1]) + '</td><td><a href="' + x[2] + '">' + A.esc(x[3]) + '</a></td><td><span class="badge b-ok">✓ Shown</span></td></tr>').join('') + '</tbody></table></div></section>'; }).join('');
+  }
+  document.getElementById('q').addEventListener('input', render); render();
+})();
+</script>
+</body>
+</html>

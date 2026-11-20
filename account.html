@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My account</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+</head>
+<body data-portal="citizen" data-page="account">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <div class="row between"><div class="stack" style="gap:2px"><h1 id="h"></h1><span class="small muted" id="who"></span></div></div>
+  <div class="grid g2">
+    <section class="card stack">
+      <h2 id="pTitle"></h2>
+      <div class="grid g2">
+        <label class="f"><span id="l1"></span><input type="text" value="Grace Ewane Mbua"></label>
+        <label class="f"><span id="l2"></span><input type="tel" value="6XX XX XX 21"></label>
+        <label class="f"><span id="l3"></span><select id="plang"><option value="en">English</option><option value="fr">Français</option><option value="pcm">Pidgin (voice)</option></select></label>
+        <label class="f"><span id="l4"></span><select><option>SMS</option><option>WhatsApp</option><option>Voice call</option></select></label>
+      </div>
+      <button class="btn sm" style="align-self:flex-start" id="save"></button>
+    </section>
+    <section class="card stack">
+      <h2 id="aTitle"></h2>
+      <div class="grid g2">
+        <label class="f"><span id="al1"></span><select id="aSvc"></select></label>
+        <label class="f"><span id="al2"></span><select id="aSlot"><option>Mon 16 Nov · 09:00</option><option>Mon 16 Nov · 11:30</option><option>Tue 17 Nov · 08:30</option><option>Wed 18 Nov · 10:00</option></select></label>
+      </div>
+      <button class="btn sm" style="align-self:flex-start" id="book"></button>
+      <div id="appts" class="stack"></div>
+    </section>
+  </div>
+  <div class="grid g2">
+    <section class="card stack"><h2 id="rTitle"></h2><div id="reqs" class="stack"></div></section>
+    <section class="card stack"><h2 id="wTitle"></h2><p class="small muted" style="margin:0" id="wIntro"></p><div id="wallet" class="stack"></div></section>
+  </div>
+  <div class="grid g2">
+    <section class="card stack"><h2 id="cTitle"></h2><div id="badges" class="chips"></div></section>
+    <section class="card stack"><h2 id="dTitle"></h2><p class="small muted" style="margin:0" id="dIntro"></p><div class="row"><button class="btn sm ghost" id="dl"></button><button class="btn sm ghost" id="del"></button></div></section>
+  </div>
+</main>
+<script>
+(function(){
+  const A = App, D = DATA; const fr = () => A.state.lang === 'fr'; const L = (e,f) => fr() ? f : e;
+  const mine = () => A.requests().filter(r => r.mine || ['BC-2026-01482','LR-2026-00199'].includes(r.id));
+  function render(){
+    document.getElementById('h').textContent = A.t('nav.account');
+    document.getElementById('who').textContent = L('Signed in with phone number and SMS code (demo) · Grace Mbua','Connecté avec numéro et code SMS (démo) · Grace Mbua');
+    document.getElementById('pTitle').textContent = L('Profile and preferences','Profil et préférences');
+    [['l1','Full name','Nom complet'],['l2','Phone','Téléphone'],['l3','Language for messages and voice','Langue des messages'],['l4','Contact me by','Me contacter par'],['al1','Service','Service'],['al2','Time','Heure']].forEach(x => document.getElementById(x[0]).textContent = fr()?x[2]:x[1]);
+    document.getElementById('save').textContent = L('Save','Enregistrer');
+    document.getElementById('aTitle').textContent = L('Book an appointment (no queue)','Prendre rendez-vous (sans file)');
+    const s = document.getElementById('aSvc'), c = s.value; s.innerHTML = [L('Civil status: sign a declaration','État civil : signer'),L('Collect a printed certificate','Retirer un acte'),L('Marriage: meet the registrar','Mariage : rendez-vous'),L('Business desk','Guichet entreprises')].map(x => '<option>' + x + '</option>').join(''); if (c) s.value = c;
+    document.getElementById('book').textContent = L('Book','Réserver');
+    document.getElementById('appts').innerHTML = A.state.appointments.map(a => '<div class="notice n-info small">✓ ' + A.esc(a.svc) + ' · ' + A.esc(a.slot) + ' · ' + L('ticket ','ticket ') + a.ticket + '</div>').join('');
+    document.getElementById('rTitle').textContent = L('My requests','Mes demandes');
+    document.getElementById('reqs').innerHTML = mine().map(r => '<a href="track.html?id=' + r.id + '" style="text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;gap:10px"><span class="stack" style="gap:0"><span class="small muted">' + r.id + ' · ' + A.esc(r.type) + '</span><strong>' + A.esc(r.name) + '</strong></span>' + A.badge(r.status) + '</a>').join('');
+    document.getElementById('wTitle').textContent = L('My documents','Mes documents');
+    document.getElementById('wIntro').textContent = L('Certificates and receipts issued to you, always verifiable by QR code.','Actes et reçus, vérifiables par QR code.');
+    const docs = mine().filter(r => r.certNo || r.receipt);
+    document.getElementById('wallet').innerHTML = docs.length ? docs.map(r => '<a href="certificate.html?id=' + r.id + '" class="row" style="text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:12px;padding:8px 12px">' + A.qrSvg(r.certNo || r.receipt, 48) + '<span class="stack" style="gap:0"><strong class="small">' + A.esc(r.type) + ' · ' + A.esc(r.name) + '</strong><span class="small muted">' + (r.certNo || r.receipt) + '</span></span></a>').join('') : '<p class="small muted">' + L('No documents yet.','Aucun document.') + '</p>';
+    document.getElementById('cTitle').textContent = L('Courses completed','Cours terminés');
+    const done = D.courses.filter(c => (A.state.progress[c.id] || {}).passed);
+    document.getElementById('badges').innerHTML = done.length ? done.map(c => '<span class="badge b-ok">✓ ' + A.esc(c.title[fr()?1:0]) + '</span>').join('') : '<span class="small muted">' + L('None yet. ','Aucun. ') + '<a href="learn.html">' + L('Start learning','Commencer') + '</a></span>';
+    document.getElementById('dTitle').textContent = L('My data and privacy','Mes données');
+    document.getElementById('dIntro').textContent = L('See what the council holds about you, or ask for correction or deletion where the law allows (Law No. 2024/017).','Consultez vos données ou demandez leur rectification (loi n° 2024/017).');
+    document.getElementById('dl').textContent = L('Download my data','Télécharger mes données'); document.getElementById('del').textContent = L('Request correction or deletion','Demander rectification');
+  }
+  document.getElementById('plang').value = A.state.lang === 'fr' ? 'fr' : 'pcm';
+  document.getElementById('save').onclick = () => A.toast(L('Saved','Enregistré'));
+  document.getElementById('book').onclick = () => { A.state.appointments.push({ svc: document.getElementById('aSvc').value, slot: document.getElementById('aSlot').value, ticket: 'A-' + (100 + A.state.appointments.length) }); A.save(); A.toast(L('Booked. SMS reminder the day before.','Réservé.')); render(); };
+  document.getElementById('dl').onclick = () => A.toast(L('Your data file is being prepared (demo)','Préparation du fichier (démo)'));
+  document.getElementById('del').onclick = () => A.toast(L('Request sent to the data protection contact (demo)','Demande envoyée (démo)'));
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

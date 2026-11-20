@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Confirm a birth</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="citizen" data-page="track">
+<div id="shell"></div>
+<main class="wrap" style="max-width:640px">
+  <div class="card stack" id="box"></div>
+</main>
+<script>
+(function(){
+  const A = App;
+  function render(){
+    const fr = A.state.lang === 'fr', box = document.getElementById('box');
+    const r = A.findReq(A.param('id') || 'BC-2026-01511');
+    if (!r) { box.innerHTML = '<p>' + (fr?'Demande introuvable.':'Request not found.') + '</p>'; return; }
+    if (r.status !== 'Awaiting parent') { box.innerHTML = '<div class="notice n-ok">' + (fr?'Déjà confirmé.':'Already confirmed.') + '</div><a class="btn" href="track.html?id=' + r.id + '">' + A.t('nav.track') + '</a>'; return; }
+    const d = r.history[0];
+    box.innerHTML =
+      '<h1 style="font-size:23px">' + (fr?'Confirmez la naissance de votre bébé':'Confirm your baby’s birth') + '</h1>' +
+      '<div class="card flat" style="background:var(--bg)"><span class="small muted">SMS · ' + A.dateFmt(d.date) + '</span><p style="margin:6px 0 0">' + A.esc(A.council().name) + (fr?' : Félicitations pour la naissance de votre bébé. La déclaration est commencée. Confirmez dans l’application, répondez 1 ou appelez le 8xxx.':': Congratulations on your baby’s birth. Registration has started. Confirm in the app, reply 1, or call 8xxx. Free within the legal period.') + '</p></div>' +
+      '<button class="btn gold" id="listen" type="button">▶ ' + (fr?'Écouter ces informations':'Listen to these details') + '</button>' +
+      '<table><tbody>' + [[fr?'Mère':'Mother', r.parent],[fr?'Né(e) le':'Born', A.dateFmt(r.created) + ', 06:40'],[fr?'Lieu':'Place', r.source],[fr?'Sexe':'Sex', fr?'Masculin':'Male']].map(x => '<tr><td class="muted">' + x[0] + '</td><td><strong>' + A.esc(x[1]) + '</strong></td></tr>').join('') + '</tbody></table>' +
+      '<label class="f">' + (fr?'Nom complet de l’enfant':'Child’s full name') + '<input type="text" id="cname" value="Daniel Njie Fonkwo"></label>' +
+      '<label class="f">' + (fr?'Nom complet du père (si déclaré)':'Father’s full name (if declared)') + '<input type="text" id="fname" value="Simon Fonkwo"></label>' +
+      '<div class="row"><button class="btn" id="ok" type="button">' + (fr?'Tout est correct':'Everything is correct') + '</button><a class="btn ghost" href="assistant.html?q=' + encodeURIComponent('birth details wrong talk to staff') + '">' + (fr?'Une erreur ? Aide':'Something is wrong? Get help') + '</a></div>';
+    document.getElementById('listen').onclick = () => { try { const u = new SpeechSynthesisUtterance((fr?'Mère ':'Mother ') + r.parent + '. ' + (fr?'Lieu ':'Born at ') + r.source); u.lang = fr?'fr-FR':'en-GB'; speechSynthesis.speak(u); } catch(e){ A.toast('Audio not available'); } };
+    document.getElementById('ok').onclick = () => {
+      A.updateRequest(r.id, { name: document.getElementById('cname').value, status: 'Awaiting registrar', mine: true, ai: { level: 'ok', text: 'Parent confirmed. Names match the health centre notification. No similar record found.' } }, 'Details confirmed by parent in the app');
+      location.href = 'track.html?id=' + r.id;
+    };
+  }
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

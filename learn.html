@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Learning centre</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+</head>
+<body data-portal="citizen" data-page="learn">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <div class="stack" style="gap:4px"><h1 id="h"></h1><p class="muted" style="margin:0" id="intro"></p></div>
+  <div class="row" role="tablist" id="tabs"></div>
+  <section id="tab-courses" class="split">
+    <div class="main stack" id="courseList"></div>
+    <aside class="side card stack" id="reader"></aside>
+  </section>
+  <section id="tab-videos" class="stack" hidden>
+    <div class="chips" id="vcats"></div>
+    <div class="grid g3" id="vlist"></div>
+  </section>
+  <section id="tab-training" class="stack" hidden>
+    <div class="grid g3" id="tlist"></div>
+  </section>
+  <section id="tab-health" class="stack" hidden>
+    <div class="notice n-info" id="hnote"></div>
+    <div class="grid g2" id="hlist"></div>
+    <div class="card stack" id="tutor">
+      <div class="row between"><h2>Staff tutor (AI)</h2><span class="small muted">For registrars, clerks and nurses · progress recorded</span></div>
+      <p class="small muted" style="margin:0">Practice cases based on the council's approved procedures. The tutor explains each answer.</p>
+      <div id="tq" class="stack"></div>
+    </div>
+  </section>
+</main>
+<script>
+(function(){
+  const A = App, D = DATA; const fr = () => A.state.lang === 'fr'; const L = (e,f) => fr() ? f : e;
+  let tab = location.hash === '#health' ? 'health' : location.hash === '#training' ? 'training' : 'courses', cur = null, lesson = 0, vcat = 'All';
+  const prog = id => A.state.progress[id] || { done: 0, passed: false };
+  function tabs(){
+    const T = [['courses', L('Short courses','Cours courts')],['videos', L('Videos and audio guides','Vidéos et guides audio')],['training', L('Training, online learning and careers','Formations, e-learning et carrières')],['health', L('For health workers','Pour les agents de santé')]];
+    document.getElementById('tabs').innerHTML = T.map(t => '<button class="btn ' + (t[0] === tab ? '' : 'ghost') + '" data-t="' + t[0] + '">' + t[1] + '</button>').join('');
+    document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
+    ['courses','videos','training','health'].forEach(t => document.getElementById('tab-' + t).hidden = t !== tab);
+  }
+  function card(c){
+    const p = prog(c.id);
+    return '<div class="card stack" style="gap:8px"><div class="row between"><span class="badge b-info">' + c.cat + '</span><span class="small muted">' + c.mins + ' min · ' + c.lang + '</span></div><h3>' + A.esc(c.title[fr()?1:0]) + '</h3>' +
+      '<div class="track" style="background:var(--tint);height:8px;border-radius:4px"><div style="height:8px;border-radius:4px;background:var(--green);width:' + (p.passed ? 100 : p.done / (c.lessons.length + 1) * 100) + '%"></div></div>' +
+      '<div class="row between"><span class="small muted">' + (p.passed ? '✓ ' + L('Completed','Terminé') : p.done ? p.done + '/' + c.lessons.length + L(' lessons',' leçons') : L('Not started','Pas commencé')) + '</span><button class="btn sm" data-c="' + c.id + '">' + (p.done ? L('Continue','Continuer') : L('Start','Commencer')) + '</button></div></div>';
+  }
+  function reader(){
+    const r = document.getElementById('reader'); const c = D.courses.find(x => x.id === cur);
+    if (!c) { r.innerHTML = '<h3>' + L('Learn at your own pace','Apprenez à votre rythme') + '</h3><p class="small muted" style="margin:0">' + L('Short lessons in plain language, with audio in Pidgin, English or French, and a one-question check at the end. Works on a basic smartphone and can be listened to by phone call.','Leçons courtes en langage simple, avec audio, et une question à la fin.') + '</p><div class="kpi"><div class="v">' + Object.values(A.state.progress).filter(p => p.passed).length + '</div><div class="l">' + L('Courses you completed','Cours terminés') + '</div></div>'; return; }
+    if (lesson < c.lessons.length) {
+      const l = c.lessons[lesson];
+      r.innerHTML = '<span class="small muted">' + A.esc(c.title[fr()?1:0]) + ' · ' + L('Lesson ','Leçon ') + (lesson+1) + '/' + c.lessons.length + '</span><h3>' + A.esc(l[0]) + '</h3><p style="margin:0">' + A.esc(l[1]) + '</p>' +
+        '<div class="row"><button class="btn sm gold" id="play">▶ ' + L('Listen','Écouter') + '</button><button class="btn sm" id="nextL">' + L('Next','Suivant') + '</button></div><a href="assistant.html?q=' + encodeURIComponent(l[0]) + '" class="small">' + L('Ask the assistant about this','Poser une question à l’assistant') + '</a>';
+      document.getElementById('play').onclick = () => { try { const u = new SpeechSynthesisUtterance(l[0] + '. ' + l[1]); u.lang = fr()?'fr-FR':'en-GB'; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch(e){ A.toast('Audio not available'); } };
+      document.getElementById('nextL').onclick = () => { lesson++; const p = prog(c.id); A.state.progress[c.id] = { done: Math.max(p.done, lesson), passed: p.passed }; A.save(); render(); };
+    } else {
+      r.innerHTML = '<span class="small muted">' + L('Quick check','Vérification') + '</span><h3>' + A.esc(c.quiz.q[fr()?1:0]) + '</h3>' + c.quiz.a.map((a,i) => '<button class="btn ghost" data-a="' + i + '" style="justify-content:flex-start;text-align:left">' + A.esc(a[fr()?1:0]) + '</button>').join('') + '<div id="qout"></div>';
+      document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+        if (+b.dataset.a === c.quiz.ok) { A.state.progress[c.id] = { done: c.lessons.length, passed: true }; A.save();
+          document.getElementById('qout').innerHTML = '<div class="notice n-ok">✓ ' + L('Correct! Course completed. A completion badge was added to your account.','Correct ! Cours terminé.') + '</div>'; setTimeout(render, 1400);
+        } else document.getElementById('qout').innerHTML = '<div class="notice n-warn">' + L('Not quite. Listen to the lessons again and try once more.','Pas tout à fait. Réécoutez les leçons et réessayez.') + '</div>';
+      });
+    }
+  }
+  function render(){
+    document.getElementById('h').textContent = L('Learning centre','Centre de formation');
+    document.getElementById('intro').textContent = L('Learn how council services work, your rights, digital skills and new trades. Free, in English, French and Pidgin.','Apprenez le fonctionnement des services, vos droits, le numérique et de nouveaux métiers. Gratuit.');
+    tabs();
+    document.getElementById('courseList').innerHTML = '<div class="grid g2">' + D.courses.filter(c => !c.audience).map(card).join('') + '</div>';
+    document.getElementById('hlist').innerHTML = D.courses.filter(c => c.audience === 'health').map(card).join('') + '<div class="card stack"><h3>' + L('Sensitisation kit for antenatal visits','Kit de sensibilisation') + '</h3><p class="small muted" style="margin:0">' + L('Posters and a 1-minute audio message to play for expectant mothers, in Pidgin, English and French.','Affiches et message audio d’une minute.') + '</p><button class="btn sm ghost" onclick="App.toast(\'Downloading kit (demo)\')">' + L('Download kit','Télécharger') + '</button></div>';
+    document.getElementById('hnote').textContent = L('Training for nurses, midwives and health centre chiefs on notifying births and deaths and on talking to parents about registration.','Formation des infirmiers et sages-femmes à la déclaration des naissances et décès.');
+    document.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { cur = b.dataset.c; lesson = Math.min(prog(cur).done, D.courses.find(x => x.id === cur).lessons.length); if (prog(cur).passed) lesson = 0; if (tab === 'health') { tab = 'courses'; } render(); document.getElementById('reader').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
+    reader();
+    const cats = ['All'].concat([...new Set(D.videos.map(v => v[0]))]);
+    document.getElementById('vcats').innerHTML = cats.map(c => '<button class="chip" style="' + (c === vcat ? 'background:var(--green);color:#fff' : '') + '" data-v="' + c + '">' + (c === 'All' ? L('All','Tout') : c) + '</button>').join('');
+    document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { vcat = b.dataset.v; render(); });
+    document.getElementById('vlist').innerHTML = D.videos.filter(v => vcat === 'All' || v[0] === vcat).map(v => '<div class="card stack" style="gap:8px"><div style="background:var(--ink);border-radius:10px;height:130px;display:flex;align-items:center;justify-content:center"><button class="btn gold" aria-label="Play ' + A.esc(v[1]) + '" onclick="App.toast(\'Playing video (demo)\')">▶</button></div><strong>' + A.esc(v[1]) + '</strong><span class="small muted">' + v[0] + ' · ' + v[2] + ' · ' + v[3] + '</span></div>').join('');
+    document.getElementById('tlist').innerHTML = D.training.map(t => {
+      const booked = A.state.enrolments.includes(t.id);
+      const action = t.type === 'Recommended site' ? '<a class="btn sm ghost" href="#" onclick="App.toast(\'Opens ' + t.provider + ' (external)\');return false">' + L('Visit site','Visiter') + '</a>'
+        : t.type === 'Online learning' ? '<a class="btn sm" href="#" onclick="App.toast(\'Opening course videos (demo)\');return false">' + L('Start learning','Commencer') + '</a>'
+        : booked ? '<span class="badge b-ok">✓ ' + L('Place booked · SMS reminder set','Place réservée') + '</span>' : '<button class="btn sm" data-book="' + t.id + '">' + L('Book a place','Réserver') + '</button>';
+      return '<div class="card stack" style="gap:8px"><span class="badge ' + ({ 'Online learning':'b-info','Onsite training':'b-ok','Career meet-up':'b-warn','Recommended site':'b-grey' }[t.type]) + '" style="align-self:flex-start">' + t.type + '</span><strong>' + A.esc(t.title) + '</strong><span class="small muted">' + A.esc(t.provider) + '</span><span class="small">' + A.esc(t.when) + (t.seats ? ' · ' + t.seats + L(' places',' places') : '') + '</span>' + action + '</div>';
+    }).join('') + '<a class="tile" href="news.html#jobs"><strong>' + L('Council jobs and apprenticeships','Emplois et apprentissages') + '</strong><span class="small muted">' + L('See open positions and apply online','Voir les offres et postuler') + '</span></a>';
+    document.querySelectorAll('[data-book]').forEach(b => b.onclick = () => { A.state.enrolments.push(b.dataset.book); A.save(); A.toast(L('Booked. You will get an SMS reminder.','Réservé.')); render(); });
+  }
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+<script>
+(function(){
+  const Q = [
+    ['A mother arrives 3 days after giving birth at Hillview. The nurse already notified the birth. What does the clerk do?', ['Start a new declaration from scratch','Open the existing notification and confirm details with the mother','Send her to the hospital first'], 1, 'The health centre notification already opened the file. Confirming it avoids a duplicate record and keeps the registration free within the legal period.'],
+    ['A father asks to register his 8-year-old child. What applies?', ['Normal birth registration','Late registration, possibly with a court judgment','Certified copy request'], 1, 'The child is beyond the legal period, so the late registration path applies. Check the council\'s rule for when a court judgment is required.'],
+    ['The AI flags a possible duplicate at another council. What should the registrar do?', ['Refuse the request','Sign anyway, the AI is often wrong','Request the other record and compare before deciding'], 2, 'The AI only flags. The registrar requests the record through the platform, compares, and decides.']
+  ];
+  let i = 0, score = 0; const box = document.getElementById('tq');
+  function show(){
+    if (i >= Q.length) { box.innerHTML = '<div class="notice n-ok">Practice complete: ' + score + ' of ' + Q.length + ' correct. Recorded in your training history.</div><button class="btn sm ghost" id="tagain" style="align-self:flex-start">Start again</button>'; document.getElementById('tagain').onclick = () => { i = 0; score = 0; show(); }; return; }
+    const q = Q[i];
+    box.innerHTML = '<span class="small muted">Case ' + (i+1) + ' of ' + Q.length + '</span><h3 style="margin:0">' + q[0] + '</h3>' + q[1].map((a,k) => '<button class="btn ghost" style="justify-content:flex-start;text-align:left" data-k="' + k + '">' + a + '</button>').join('') + '<div id="tfb"></div>';
+    box.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { const ok = +b.dataset.k === q[2]; if (ok) score++; box.querySelectorAll('[data-k]').forEach(x => x.disabled = true); document.getElementById('tfb').innerHTML = '<div class="notice ' + (ok ? 'n-ok' : 'n-warn') + '">' + (ok ? 'Correct. ' : 'Not quite. ') + q[3] + '</div><button class="btn sm" id="tnext" style="align-self:flex-start">Next</button>'; document.getElementById('tnext').onclick = () => { i++; show(); }; });
+  }
+  show();
+})();
+</script>
+</body>
+</html>

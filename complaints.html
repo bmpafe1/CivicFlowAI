@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Complaints and feedback</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+</head>
+<body data-portal="citizen" data-page="complaints">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <h1 id="h"></h1>
+  <div class="grid g2">
+    <section class="card stack">
+      <h2 id="nTitle"></h2>
+      <label class="f"><span id="l1"></span><select id="topic"></select></label>
+      <label class="f"><span id="l2"></span><textarea id="text">Street light broken for a month near Bota roundabout.</textarea></label>
+      <label class="btn ghost sm" style="align-self:flex-start"><span id="l3"></span><input type="file" accept="image/*" class="sr" id="photo"></label>
+      <label class="row small"><input type="checkbox" id="anon" style="width:20px;height:20px"> <span id="l4"></span></label>
+      <button class="btn" id="send" style="align-self:flex-start"></button>
+      <div id="out"></div>
+    </section>
+    <section class="card stack">
+      <h2 id="rTitle"></h2>
+      <p class="small muted" style="margin:0" id="rIntro"></p>
+      <div id="rate" class="stack"></div>
+    </section>
+  </div>
+  <section class="card stack"><h2 id="mTitle"></h2><div class="scroll-x"><table id="list"></table></div></section>
+</main>
+<script>
+(function(){
+  const A = App, D = DATA; const fr = () => A.state.lang === 'fr'; const L = (e,f) => fr() ? f : e;
+  const all = () => A.state.complaints.concat(D.complaintsSeed);
+  function render(){
+    document.getElementById('h').textContent = L('Complaints, suggestions and feedback','Réclamations, suggestions et avis');
+    document.getElementById('nTitle').textContent = L('Tell the council','Écrire à la commune');
+    document.getElementById('l1').textContent = L('Topic','Sujet'); document.getElementById('l2').textContent = L('What happened or what you suggest','Description ou suggestion');
+    document.getElementById('l3').textContent = L('Add a photo','Ajouter une photo'); document.getElementById('l4').textContent = L('Send anonymously','Envoyer anonymement'); document.getElementById('send').textContent = L('Send','Envoyer');
+    const t = document.getElementById('topic'), cur = t.value;
+    t.innerHTML = [['Roads and lighting','Voirie et éclairage'],['Waste collection','Déchets'],['Civil status service','État civil'],['Markets','Marchés'],['Staff behaviour','Comportement d’un agent'],['Suggestion','Suggestion']].map(x => '<option>' + x[fr()?1:0] + '</option>').join(''); if (cur) t.value = cur;
+    document.getElementById('rTitle').textContent = L('Rate a service you used','Notez un service utilisé');
+    document.getElementById('rIntro').textContent = L('Ratings help the council see where to improve. Shown on the management dashboard.','Les notes aident la commune à s’améliorer.');
+    const done = A.requests().filter(r => r.mine || ['BC-2026-01482','BC-2026-01470'].includes(r.id)).filter(r => ['Ready','Collected'].includes(r.status));
+    document.getElementById('rate').innerHTML = done.length ? done.map(r => { const g = A.state.ratings.find(x => x.id === r.id); return '<div class="row between" style="border:1px solid var(--line);border-radius:12px;padding:10px 14px"><span class="stack" style="gap:0"><strong class="small">' + A.esc(r.type) + ' · ' + A.esc(r.name) + '</strong><span class="small muted">' + r.id + '</span></span><span class="row" style="gap:4px">' + [1,2,3,4,5].map(n => '<button class="btn sm ' + (g && g.stars >= n ? 'gold' : 'ghost') + '" aria-label="' + n + ' stars" data-r="' + r.id + '" data-n="' + n + '">★</button>').join('') + '</span></div>'; }).join('') : '<p class="muted small">' + L('No completed requests yet.','Aucune demande terminée.') + '</p>';
+    document.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { A.state.ratings = A.state.ratings.filter(x => x.id !== b.dataset.r).concat([{ id: b.dataset.r, stars: +b.dataset.n }]); A.save(); A.toast(L('Thank you for your rating','Merci pour votre note')); render(); });
+    document.getElementById('mTitle').textContent = L('My complaints and replies','Mes réclamations et réponses');
+    document.getElementById('list').innerHTML = '<thead><tr><th>Ref.</th><th>' + L('Topic','Sujet') + '</th><th>' + L('Message','Message') + '</th><th>Date</th><th>Status</th><th>' + L('Council reply','Réponse') + '</th></tr></thead><tbody>' + all().map(c => '<tr><td>' + c.ref + '</td><td>' + A.esc(c.topic) + '</td><td class="small">' + A.esc(c.text) + '</td><td class="small">' + A.dateFmt(c.date) + '</td><td><span class="badge ' + ({ 'New':'b-warn','In progress':'b-info','Answered':'b-ok' }[c.status]) + '">' + c.status + '</span></td><td class="small">' + A.esc(c.reply || '—') + '</td></tr>').join('') + '</tbody>';
+  }
+  document.getElementById('photo').onchange = () => A.toast(L('Photo attached','Photo ajoutée'));
+  document.getElementById('send').onclick = () => {
+    const ref = 'CMP-2026-0' + (150 + A.state.complaints.length);
+    A.state.complaints.unshift({ ref, topic: document.getElementById('topic').value, text: document.getElementById('text').value, date: A.TODAY, status: 'New', service: document.getElementById('topic').value, reply: '', anon: document.getElementById('anon').checked }); A.save();
+    document.getElementById('out').innerHTML = '<div class="notice n-ok">' + L('Received. Reference ','Reçu. Référence ') + '<strong>' + ref + '</strong>. ' + L('You will get a reply within 10 working days (demo).','Réponse sous 10 jours ouvrables (démo).') + '</div>'; render();
+  };
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

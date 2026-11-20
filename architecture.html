@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How it works · architecture, AI models and evaluation</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<style>
+  .arch{display:grid;gap:10px}
+  .arow{display:grid;gap:8px}
+  .abox{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;text-align:center}
+  .abox strong{display:block;font-size:14px}
+  .abox span{font-size:12px;color:var(--muted)}
+  .acont{border:1px solid var(--line);border-radius:14px;padding:12px;background:var(--tint)}
+  .acont > h3{margin:0 0 8px;font-size:14px}
+  .hi{border:2px solid var(--green);background:#fff}
+  .down{text-align:center;color:var(--muted);font-size:18px;line-height:1}
+  @media (min-width:760px){ .r5{grid-template-columns:repeat(5,1fr)} .r4{grid-template-columns:repeat(4,1fr)} .r2{grid-template-columns:1fr 1fr} }
+  .gate td:last-child{white-space:nowrap}
+</style>
+</head>
+<body data-portal="how" data-page="how">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <div class="stack" style="gap:4px">
+    <h1 style="font-size:26px">How it works</h1>
+    <p class="muted" style="margin:0">Technical architecture, AI models and how we check their output before residents rely on them. Prepared for the Cities Deliver Seed application; all data in this prototype is synthetic.</p>
+  </div>
+
+  <section class="card stack">
+    <h2>One back end serves every channel; AI models can be swapped</h2>
+    <div class="arch">
+      <div class="arow r5">
+        <div class="abox"><strong>Citizen app</strong><span>web and Android</span></div>
+        <div class="abox"><strong>WhatsApp</strong><span>voice notes, photos</span></div>
+        <div class="abox"><strong>SMS and USSD</strong><span>basic phones, calls</span></div>
+        <div class="abox"><strong>Health centres</strong><span>birth and death notices</span></div>
+        <div class="abox"><strong>Staff desks</strong><span>work offline</span></div>
+      </div>
+      <div class="down">↓</div>
+      <div class="acont"><h3>Platform core: one code base for every council <span class="small muted">(Python, Django, PostgreSQL)</span></h3>
+        <div class="arow r4">
+          <div class="abox">Civil status</div><div class="abox">Archives (EDMS)</div><div class="abox">Payments and receipts</div><div class="abox">Business and tax</div>
+          <div class="abox">Assistant</div><div class="abox">Public council page</div><div class="abox">Roles and audit log</div><div class="abox">Notifications</div>
+        </div>
+      </div>
+      <div class="down">↓</div>
+      <div class="arow r2">
+        <div class="acont"><h3>AI layer</h3>
+          <div class="abox hi"><strong>Model gateway</strong><span>switch provider without rebuilding</span></div>
+          <div class="arow r2" style="margin-top:8px">
+            <div class="abox"><strong>Hosted models</strong><span>chosen by our tests</span></div>
+            <div class="abox"><strong>Open-weight models</strong><span>on rented GPUs, data stays with us</span></div>
+          </div>
+          <p class="small muted" style="margin:8px 0 0">Guardrails: answers only from the council knowledge base, personal details masked, every AI output logged with its model version.</p>
+        </div>
+        <div class="acont"><h3>Data: pilot hosted at the University of Buea data centre</h3>
+          <div class="stack" style="gap:8px">
+            <div class="abox">Records, roles and search (PostgreSQL, separated per council)</div>
+            <div class="abox">Scanned pages with tamper-proof fingerprints</div>
+            <div class="abox">Encrypted, daily backups, audit trail (Law No. 2024/017)</div>
+          </div>
+        </div>
+      </div>
+      <div class="down">↓</div>
+      <div class="arow r4">
+        <div class="abox"><strong>BUNEC</strong><span>national format, via the council</span></div>
+        <div class="abox"><strong>Mobile money</strong><span>MTN, Orange</span></div>
+        <div class="abox"><strong>Messaging</strong><span>WhatsApp, SMS, voice</span></div>
+        <div class="abox"><strong>Other councils</strong><span>match scores only</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card stack">
+    <h2>What the AI does, and who checks it</h2>
+    <p class="small muted" style="margin:0">Recent generative models do the tasks rules cannot. The team picks the best model for each task from its own test results; the funder has no provider preference.</p>
+    <div class="scroll-x"><table>
+      <thead><tr><th>Task</th><th>What the AI does</th><th>Models to compare</th><th>Human check</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Read handwritten registers</strong></td><td>Turns each scanned entry into typed fields with a confidence score</td><td>Hosted multimodal models (OpenAI, Google Gemini, Anthropic Claude); Transkribus handwriting models trained on our registers; open-weight vision models; classic OCR for printed forms</td><td>Clerk verifies low-confidence fields; second-person sample check</td></tr>
+        <tr><td><strong>Resident assistant</strong></td><td>Answers and guides from approved council information; fills requests by conversation</td><td>Hosted general models; smaller open-weight fallback</td><td>Knowledge base approved by staff; weekly review of conversations</td></tr>
+        <tr><td><strong>Voice</strong></td><td>Understands voice notes in English, French and Pidgin; reads answers aloud</td><td>Whisper-family speech models fine-tuned on consented recordings; hosted speech services compared on the same tests</td><td>Read-back before acting; Pidgin only after resident testing</td></tr>
+        <tr><td><strong>Document photos</strong></td><td>Reads hospital notes, ID cards and old certificates to pre-fill requests</td><td>Same as register reading</td><td>Registrar compares with the original</td></tr>
+        <tr><td><strong>Pre-checks and duplicates</strong></td><td>Flags missing items, impossible dates, possible duplicates across councils</td><td>Rules, fuzzy name matching, model-assisted comparison</td><td>Registrar decides; never an automatic refusal</td></tr>
+        <tr><td><strong>Staff drafting</strong></td><td>Letters, translations, minutes, the monthly BUNEC report</td><td>Hosted general models</td><td>Staff edit and send</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="card stack">
+    <div class="row between"><h2>Pass marks before residents rely on the AI</h2><span class="badge b-warn">Testing on synthetic data</span></div>
+    <p class="small muted" style="margin:0">Proposed thresholds, to be agreed with Limbe II Council and the evaluation lead at the month-3 gate. Results below are placeholders: the tests have not been run yet.</p>
+    <div class="scroll-x"><table class="gate">
+      <thead><tr><th>Feature</th><th>Test set</th><th>Pass mark to go live</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Register reading</td><td>Synthetic and consented register entries, keyed twice by clerks</td><td>Over 95% correct on high-confidence fields; 90% of errors sent to a clerk</td><td><span class="badge b-grey">Not yet tested</span></td></tr>
+        <tr><td>Assistant answers</td><td>300 questions in English, French and Pidgin, approved answers</td><td>90% correct; under 1% confidently wrong; all out-of-scope questions handed to staff</td><td><span class="badge b-grey">Not yet tested</span></td></tr>
+        <tr><td>Fees and deadlines</td><td>Every fee and deadline question</td><td>100% exact</td><td><span class="badge b-grey">Not yet tested</span></td></tr>
+        <tr><td>Pidgin voice</td><td>Consented recordings with noise and phone audio</td><td>Intent understood in 85% of voice notes</td><td><span class="badge b-grey">Not yet tested</span></td></tr>
+        <tr><td>Safety and privacy</td><td>Red-team prompts asking for other people's records</td><td>Zero personal data leaks</td><td><span class="badge b-grey">Not yet tested</span></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section class="card stack">
+    <h2>Built to the Cities Deliver rules</h2>
+    <div class="grid g2">
+      <div class="notice n-ok"><strong>City-led.</strong> Limbe II Council owns the service; each new council joins with its own letter of intent.</div>
+      <div class="notice n-ok"><strong>Frontier AI at the core.</strong> Handwriting, Pidgin voice and conversational forms need generative models.</div>
+      <div class="notice n-ok"><strong>Responsible AI.</strong> Staff approve every legal act; answers are grounded; pass marks before go-live.</div>
+      <div class="notice n-ok"><strong>Open source.</strong> Code, prompts, evaluation tools and documentation under Apache 2.0.</div>
+      <div class="notice n-ok"><strong>Privacy.</strong> Law No. 2024/017 and GDPR principles; minimal data to AI providers; synthetic data in all demos.</div>
+      <div class="notice n-ok"><strong>No equipment from the grant.</strong> Hosting and GPU time are rented; devices come from the council or other funders.</div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

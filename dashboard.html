@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Council management dashboard</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="manage" data-page="dashboard">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px">
+  <div class="stack" style="gap:2px"><h1 style="font-size:24px" id="h"></h1><span class="small muted" id="sub"></span></div>
+  <div class="grid g4" id="kpis"></div>
+  <div class="grid g2">
+    <section class="card stack"><h2 id="c1"></h2><p class="small muted" style="margin:0" id="c1s"></p><div class="cols" id="regs"></div><div class="legend"><span><i style="background:var(--green)"></i><span id="lg1"></span></span><span><i style="background:var(--gold)"></i><span id="lg2"></span></span></div></section>
+    <section class="card stack"><h2 id="c2"></h2><p class="small muted" style="margin:0" id="c2s"></p><div class="bars" id="rev"></div></section>
+  </div>
+  <div class="grid g3">
+    <section class="card stack"><h2 id="c3"></h2><div class="bars" id="chan"></div></section>
+    <section class="card stack"><h2 id="c4"></h2><div class="bars" id="langs"></div><p class="small muted" style="margin:0" id="asst"></p></section>
+    <section class="card stack"><h2 id="c5"></h2><div class="bars" id="qs"></div><p class="small muted" style="margin:0" id="c5s"></p></section>
+  </div>
+  <div class="grid g2">
+    <section class="card stack"><h2>Ask a question about your data</h2><p class="small muted" style="margin:0">Plain-language questions; the AI answers from the council's own figures and shows how it got the answer.</p>
+      <div class="chips" id="dq"></div><div id="da"></div></section>
+    <section class="card stack"><h2>Send a sensitisation campaign</h2>
+      <div class="grid g2"><label class="f">Audience<select id="ca"><option>Parents of children without certificates (est. 640)</option><option>Expectant mothers enrolled at health centres (55)</option><option>Moto-taxi riders with expired fees (114)</option></select></label><label class="f">Channel<select id="cc"><option>Voice call + SMS</option><option>WhatsApp</option><option>SMS only</option></select></label></div>
+      <label class="f">Message (sent in each person's language)<textarea id="cm">Free registration week, 1–5 December: bring your child's documents to the council or start in the app.</textarea></label>
+      <button class="btn sm" id="cs" style="align-self:flex-start">Send campaign</button><div id="co"></div>
+      <div class="row small muted" id="sat"></div></section>
+  </div>
+  <section class="card stack"><h2 id="c6"></h2><div class="scroll-x"><table id="reports"></table></div></section>
+</main>
+<script>
+(function(){
+  const A = App; const fr = () => A.state.lang === 'fr'; const L = (e,f) => fr() ? f : e;
+  const bars = (rows, unit) => { const max = Math.max(...rows.map(r => r[1]), 1); return rows.map(r => '<div class="bar"><span>' + A.esc(r[0]) + '</span><div class="track"><div class="fill" style="width:' + (r[1]/max*100) + '%"></div></div><span style="text-align:right">' + (unit === 'fcfa' ? (r[1]/1000).toLocaleString('en-US') + 'k' : r[1] + (unit || '')) + '</span></div>').join(''); };
+  function render(){
+    const S = A.STATS[A.state.council] || { months:['Jun','Jul','Aug','Sep','Oct','Nov'], onTime:[0,0,0,0,0,0], late:[0,0,0,0,0,0], revenue:[['No payments yet',0]], channels:[['No activity yet',0]], questions:[['No questions yet',0]], languages:[['—',0]], assistant:{answered:0,handedOver:0,conversations:0}, reports:0 }, reqs = A.requests();
+    const nov = S.onTime[5] + S.late[5], rate = Math.round(S.onTime.reduce((a,b)=>a+b,0) / (S.onTime.reduce((a,b)=>a+b,0) + S.late.reduce((a,b)=>a+b,0) || 1) * 100);
+    const revenue = S.revenue.reduce((a,r) => a + r[1], 0);
+    const reports = S.reports + A.state.reports.filter(r => r.council === A.state.council).length;
+    document.getElementById('h').textContent = L('Council dashboard','Tableau de bord de la commune');
+    document.getElementById('sub').textContent = A.council().name + ' · ' + L('June – November 2026 (demo data)','juin – novembre 2026 (données de démo)');
+    const K = [[L('Births registered this month','Naissances enregistrées ce mois'), nov],[L('Registered on time (6 months)','Enregistrées dans les délais (6 mois)'), rate + '%'],[L('Requests waiting for registrar','Demandes en attente'), reqs.filter(r => r.status === 'Awaiting registrar').length],[L('Revenue collected (6 months)','Recettes (6 mois)'), (revenue/1e6).toFixed(2) + 'M FCFA'],[L('Questions answered by assistant','Questions résolues par l’assistant'), S.assistant.answered + '%'],[L('Extortion reports','Signalements d’extorsion'), reports]];
+    document.getElementById('kpis').innerHTML = K.map((k,i) => '<div class="kpi"><div class="v" style="' + (i===5 && reports ? 'color:var(--red)' : '') + '">' + k[1] + '</div><div class="l">' + k[0] + '</div></div>').join('');
+    document.getElementById('c1').textContent = L('Birth registrations: on time vs late','Naissances : dans les délais / tardives');
+    document.getElementById('c1s').textContent = L('Late registrations are falling as health centres notify births and parents get reminders.','Les déclarations tardives baissent grâce aux centres de santé et aux rappels.');
+    document.getElementById('lg1').textContent = L('On time','Dans les délais'); document.getElementById('lg2').textContent = L('Late','Tardives');
+    const mx = Math.max(...S.onTime.map((v,i) => v + S.late[i]), 1);
+    document.getElementById('regs').innerHTML = S.months.map((m,i) => '<div class="c"><small>' + (S.onTime[i] + S.late[i]) + '</small><div class="stack2" style="height:' + ((S.onTime[i]+S.late[i])/mx*140) + 'px" title="' + m + ': ' + S.onTime[i] + ' on time, ' + S.late[i] + ' late"><div class="late" style="flex:' + S.late[i] + '"></div><div class="on" style="flex:' + S.onTime[i] + '"></div></div><small>' + m + (i===5?'*':'') + '</small></div>').join('');
+    document.getElementById('c2').textContent = L('Revenue by service','Recettes par service');
+    document.getElementById('c2s').textContent = L('Thousand FCFA, June – November. Every payment has a QR receipt.','Milliers de FCFA, juin – novembre. Chaque paiement a un reçu QR.');
+    document.getElementById('rev').innerHTML = bars(S.revenue, 'fcfa');
+    document.getElementById('c3').textContent = L('How citizens reach us','Canaux utilisés'); document.getElementById('chan').innerHTML = bars(S.channels, '%');
+    document.getElementById('c4').textContent = L('Assistant languages','Langues de l’assistant'); document.getElementById('langs').innerHTML = bars(S.languages, '%');
+    document.getElementById('asst').textContent = S.assistant.conversations.toLocaleString('en-US') + L(' conversations; ',' conversations ; ') + S.assistant.handedOver + L('% handed to staff.','% transmises à un agent.');
+    document.getElementById('c5').textContent = L('What citizens ask most','Questions les plus fréquentes'); document.getElementById('qs').innerHTML = bars(S.questions, '');
+    document.getElementById('c5s').textContent = L('Use this to plan sensitisation and update guides.','À utiliser pour la sensibilisation et les guides.');
+    document.getElementById('c6').textContent = L('Extortion reports (anonymous)','Signalements d’extorsion (anonymes)');
+    const demo = A.state.council === 'limbe2' ? [{ ref:'RPT-2026-0029', date:'2026-11-07', where:'Down Beach roundabout', amount:5000, desc:'Asked for cash for "jacket inspection".' },{ ref:'RPT-2026-0030', date:'2026-11-10', where:'Mile 4 market', amount:2000, desc:'Stall fee demanded twice in one week.' }] : [];
+    const all = A.state.reports.filter(r => r.council === A.state.council).concat(demo);
+    document.getElementById('reports').innerHTML = '<thead><tr><th>Ref.</th><th>Date</th><th>' + L('Where','Lieu') + '</th><th>' + L('Amount asked','Montant') + '</th><th>' + L('What happened','Description') + '</th><th>' + L('Status','Statut') + '</th></tr></thead><tbody>' + (all.length ? all.map((r,i) => '<tr><td>' + r.ref + '</td><td>' + A.dateFmt(r.date) + '</td><td>' + A.esc(r.where) + '</td><td>' + A.fmt(r.amount) + '</td><td class="small">' + A.esc(r.desc) + '</td><td>' + (i === 0 && A.state.reports.length ? '<span class="badge b-warn">New</span>' : '<span class="badge b-info">' + L('Under review','En cours') + '</span>') + '</td></tr>').join('') : '<tr><td colspan="6" class="muted">' + L('No reports.','Aucun signalement.') + '</td></tr>') + '</tbody>';
+  }
+  const DQ = [['How many late registrations this quarter, by neighbourhood?','Late registrations, Sep–Nov 2026: 47. Bota 15, Mile 4 12, Down Beach 9, Church Street 7, other 4. Down 38% on Jun–Aug. (Source: civil status records; demo)'],['Which health centre has the most unconfirmed births?','Hillview Health Centre: 7 births awaiting parent confirmation, oldest 9 days. Suggest a voice-call reminder campaign. (Source: health centre notifications; demo)'],['How much rider revenue did we collect in October?','October rider registrations and jackets: 214,500 FCFA from 33 riders, all by mobile money with QR receipts. (Source: treasury; demo)']];
+  document.getElementById('dq').innerHTML = DQ.map((q,i) => '<button class="chip" data-dq="' + i + '">' + q[0] + '</button>').join('');
+  document.querySelectorAll('[data-dq]').forEach(b => b.onclick = () => { document.getElementById('da').innerHTML = '<div class="notice n-info">' + DQ[+b.dataset.dq][1] + '</div>'; });
+  document.getElementById('cs').onclick = () => { A.state.campaigns.push({ a: document.getElementById('ca').value, c: document.getElementById('cc').value, date: A.TODAY }); A.save(); document.getElementById('co').innerHTML = '<div class="notice n-ok">Campaign sent (demo) to ' + document.getElementById('ca').value.replace(/.*\(est\. |.*\(|\)/g,'') + ' people by ' + document.getElementById('cc').value + ', in English, French or Pidgin according to each person\u2019s preference.</div>'; };
+  const R = A.state.ratings, avg = R.length ? (R.reduce((s,r) => s + r.stars, 0) / R.length).toFixed(1) : '4.3';
+  document.getElementById('sat').textContent = 'Citizen satisfaction: ' + avg + ' / 5 from ' + (R.length + 212) + ' ratings · open complaints: ' + (A.state.complaints.filter(c => c.status !== 'Answered').length + 1) + ' · campaigns sent: ' + (A.state.campaigns.length + 3);
+  render(); document.addEventListener('langchange', render);
+})();
+</script>
+</body>
+</html>

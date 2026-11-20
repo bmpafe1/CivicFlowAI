@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mobile app preview</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+</head>
+<body data-portal="mobile" data-page="app">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:18px">
+  <div class="row between">
+    <div class="stack" style="gap:2px"><h1 style="font-size:24px">Citizen mobile app</h1><span class="small muted" id="sub"></span></div>
+    <a class="btn ghost" href="admin.html#theme">Change this council's theme</a>
+  </div>
+  <div class="notice n-info small">The app loads its council's theme when it opens and whenever the administrator changes it, so there is no new app release. Change the theme in Administration (in another tab) and watch these phones update. Each phone is fully clickable.</div>
+  <div class="row" style="gap:28px;align-items:flex-start;justify-content:center">
+    <div class="stack" style="align-items:center"><div class="phone-frame"><iframe name="app" title="App home" src="index.html?app=1"></iframe></div><span class="small muted">Home</span></div>
+    <div class="stack" style="align-items:center"><div class="phone-frame"><iframe name="app" title="App assistant" src="assistant.html?app=1"></iframe></div><span class="small muted">Assistant</span></div>
+    <div class="stack" style="align-items:center"><div class="phone-frame"><iframe name="app" title="App tracking" src="track.html?app=1&amp;id=BC-2026-01482"></iframe></div><span class="small muted">Track a request</span></div>
+  </div>
+</main>
+<script>
+document.getElementById('sub').textContent = App.council().name + ' · theme: ' + App.themeFor(App.state.council).name;
+window.addEventListener('storage', () => setTimeout(() => { document.getElementById('sub').textContent = App.council().name + ' · theme: ' + App.themeFor(App.state.council).name; }, 50));
+</script>
+</body>
+</html>

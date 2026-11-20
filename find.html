@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Find my certificate</title>
+<link rel="stylesheet" href="assets/app.css">
+<script src="assets/common.js"></script>
+<script src="assets/data.js"></script>
+</head>
+<body data-portal="citizen" data-page="apply">
+<div id="shell"></div>
+<main class="wrap stack" style="gap:20px;max-width:980px">
+  <div class="stack" style="gap:4px"><h1 id="h"></h1><p class="muted" style="margin:0" id="intro"></p></div>
+  <div class="chips" id="tries"></div>
+  <form id="f" class="card stack">
+    <div class="grid g2">
+      <label class="f"><span id="l1"></span><input type="text" id="name" required></label>
+      <label class="f"><span id="l2"></span><input type="text" id="year" placeholder="e.g. 2009"></label>
+      <label class="f"><span id="l3"></span><input type="text" id="mother"></label>
+      <label class="f"><span id="l4"></span><select id="type"><option>Birth</option><option>Marriage</option><option>Death</option></select></label>
+      <label class="f"><span id="l5"></span><select id="rel"></select></label>
+      <label class="f"><span id="l6"></span><input type="text" id="idno" value="ID 1234567 (demo)"></label>
+    </div>
+    <button class="btn" style="align-self:flex-start" id="go"></button>
+  </form>
+  <div id="out"></div>
+</main>
+<script>
+(function(){
+  const A = App, D = DATA; const fr = () => A.state.lang === 'fr'; const L = (e,f) => fr() ? f : e;
+  const norm = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z ]/g,' ').split(/\s+/).filter(Boolean);
+  const lev = (a,b) => { const d = Array.from({length: a.length+1}, (_,i) => [i]); for (let j=1;j<=b.length;j++) d[0][j]=j; for (let i=1;i<=a.length;i++) for (let j=1;j<=b.length;j++) d[i][j] = Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1] + (a[i-1]===b[j-1]?0:1)); return d[a.length][b.length]; };
+  const tokSim = (x,y) => { const a = norm(x), b = norm(y); if (!a.length || !b.length) return 0; let s = 0; a.forEach(t => { s += Math.max(...b.map(u => 1 - lev(t,u) / Math.max(t.length,u.length))); }); return s / Math.max(a.length, b.length); };
+  function score(r, q){
+    let s = tokSim(q.name, r.name) * 60, why = [];
+    if (tokSim(q.name, r.name) > 0.85) why.push(L('name','nom')); else if (tokSim(q.name, r.name) > 0.6) why.push(L('similar name','nom proche'));
+    if (q.year && r.dob.startsWith(q.year)) { s += 25; why.push(L('year of birth','année')); } else if (q.year && Math.abs(+r.dob.slice(0,4) - +q.year) === 1) { s += 12; why.push(L('year ±1','année ±1')); }
+    if (q.mother && tokSim(q.mother, r.mother) > 0.7) { s += 15; why.push(L('mother’s name','nom de la mère')); }
+    if (r.type !== q.type) s -= 40;
+    return { r, s: Math.round(Math.min(s, 99)), why };
+  }
+  const cname = id => (A.state.councils.find(c => c.id === id) || {}).name || id;
+  function texts(){
+    document.getElementById('h').textContent = L('Find my certificate','Retrouver mon acte');
+    document.getElementById('intro').textContent = L('The AI searches this council’s digitised archives and the shared index of other councils. It tells you straight away whether your certificate can be downloaded as soon as you pay, needs a manual search, or is held by another council.','L’IA cherche dans les archives numérisées et l’index partagé des autres communes, et vous dit tout de suite si votre acte est téléchargeable dès le paiement, nécessite une recherche manuelle, ou se trouve dans une autre commune.');
+    [['l1','Name on the certificate','Nom sur l’acte'],['l2','Year of birth or event','Année de naissance ou de l’événement'],['l3','Mother’s name (helps matching)','Nom de la mère'],['l4','Certificate type','Type d’acte'],['l5','Your relationship to the person','Votre lien avec la personne'],['l6','Your ID number (checked before issue)','Votre numéro de CNI']].forEach(x => document.getElementById(x[0]).textContent = fr() ? x[2] : x[1]);
+    const rel = document.getElementById('rel'), cur = rel.value; rel.innerHTML = [L('It is my own certificate','C’est mon acte'),L('I am a parent','Je suis parent'),L('I am the spouse','Conjoint(e)'),L('I have written authorisation','J’ai une procuration')].map(o => '<option>' + o + '</option>').join(''); if (cur) rel.value = cur;
+    document.getElementById('go').textContent = L('Search with AI','Rechercher avec l’IA');
+    const T = [['Marie Ngole','2009','Esther Ngole', L('digitised','numérisé')],['Clovis Ayuk','2004','Mary Ayuk', L('not yet scanned','pas encore scanné')],['Mary Ebot Ashu','1998','Comfort Ashu', L('other councils','autres communes')],['Joseph Nfor Tamfu','2007','Grace Tamfu', L('displaced, record at Buea','déplacé, acte à Buea')]];
+    document.getElementById('tries').innerHTML = '<span class="small muted">' + L('Try:','Essayez :') + '</span>' + T.map(t => '<button class="chip" data-t="' + t.slice(0,3).join('|') + '">' + t[0] + ' ' + t[1] + ' (' + t[3] + ')</button>').join('');
+    document.querySelectorAll('[data-t]').forEach(b => b.onclick = () => { const [n,y,m] = b.dataset.t.split('|'); document.getElementById('name').value = n; document.getElementById('year').value = y; document.getElementById('mother').value = m; search(); });
+  }
+  function make(rec, opts){
+    const r = A.addRequest(Object.assign({ id: A.newId('CP'), council: A.state.council, type: 'Copy (remote)', name: rec.name, parent: rec.mother, phone: '6XX XX XX 21', source: 'Find my certificate (AI search)', channel: 'App', lang: A.state.lang, created: A.TODAY, paid: false, mine: true, history: [A.h(A.TODAY, 'Located by AI search: ' + rec.ref + ' (' + cname(rec.council) + ')'), A.h(A.TODAY, 'Requester ID and relationship checked: ' + document.getElementById('rel').value)] }, opts));
+    return r;
+  }
+  function search(){
+    const q = { name: document.getElementById('name').value, year: document.getElementById('year').value.trim(), mother: document.getElementById('mother').value, type: document.getElementById('type').value };
+    const out = document.getElementById('out');
+    if (!q.name.trim()) { out.innerHTML = '<div class="notice n-warn">' + L('Enter the name on the certificate.','Saisissez le nom.') + '</div>'; return; }
+    out.innerHTML = '<div class="card row"><span class="badge b-info">AI</span><span>' + L('Searching digitised archives of ','Recherche dans les archives de ') + A.esc(A.council().name) + L(' and the shared index of other councils…',' et l’index des autres communes…') + '</span></div>';
+    setTimeout(() => {
+      const done = A.state.recDigitised || []; const res = D.records.map(r => done.includes(r.id) ? Object.assign({}, r, { digitised: true, verified: true }) : r).map(r => score(r, q)).filter(x => x.s >= 55).sort((a,b) => b.s - a.s);
+      const here = res.filter(x => x.r.council === A.state.council), else_ = res.filter(x => x.r.council !== A.state.council);
+      const best = here[0];
+      if (best && best.s >= 75 && best.r.digitised && best.r.verified) {
+        out.innerHTML = '<div class="card stack" style="border:2px solid #1D9E75"><span class="badge b-ok" style="align-self:flex-start;font-size:14px">✓ ' + L('Found and digitised: ready to download as soon as you pay','Trouvé et numérisé : téléchargeable dès le paiement') + '</span>' +
+          '<p style="margin:0">' + L('I found your ','J’ai trouvé votre ') + q.type.toLowerCase() + L(' certificate in ',' dans ') + A.esc(A.council().name) + L('’s digitised archives (match ',' (correspondance ') + best.s + '%: ' + best.why.join(', ') + '). ' + L('It has been checked by a clerk, so it can be issued immediately with the council’s digital seal.','Il a été vérifié par un agent et peut être délivré immédiatement avec le sceau numérique de la commune.') + '</p>' +
+          '<div class="row between"><span>' + L('Official fee: ','Frais : ') + '<strong>' + A.fmt(3000) + '</strong></span><button class="btn" id="payNow">' + L('Pay and download now','Payer et télécharger') + '</button></div>' +
+          '<span class="small muted">' + L('For privacy, details are shown only after payment and ID check.','Par confidentialité, les détails s’affichent après paiement et contrôle d’identité.') + '</span></div>';
+        document.getElementById('payNow').onclick = () => { const r = make(best.r, { status: 'Awaiting payment', fee: 3000, autoIssue: true, ai: { level: 'ok', text: 'Digitised and verified record: ' + best.r.ref + '. Auto-issue on payment.' } }); location.href = 'pay.html?id=' + r.id; };
+      } else if (best && best.s >= 75 && !best.r.digitised) {
+        out.innerHTML = '<div class="card stack" style="border:2px solid #EF9F27"><span class="badge b-warn" style="align-self:flex-start;font-size:14px">⏳ ' + L('Found in the register index, not yet digitised','Trouvé dans l’index, pas encore numérisé') + '</span>' +
+          '<p style="margin:0">' + L('Your record appears in the index of ','Votre acte figure dans l’index de ') + A.esc(A.council().name) + ' (' + A.esc(best.r.ref) + L('), but that register has not been scanned yet. A clerk will retrieve the book, scan the page and check it. This usually takes ','), mais ce registre n’est pas encore scanné. Un agent va le retrouver, scanner la page et la vérifier, en général sous ') + '<strong>' + L('3 working days','3 jours ouvrables') + '</strong>.</p>' +
+          '<div class="row between"><span>' + L('Fee: ','Frais : ') + '<strong>' + A.fmt(3000) + '</strong> · ' + L('refunded if the record cannot be found','remboursé si l’acte est introuvable') + '</span><button class="btn" id="payRet">' + L('Pay and start the search','Payer et lancer la recherche') + '</button></div>' +
+          '<span class="small muted">' + L('You will get an SMS the moment it is ready to download.','Vous recevrez un SMS dès qu’il sera prêt.') + '</span></div>';
+        document.getElementById('payRet').onclick = () => { const r = make(best.r, { status: 'Awaiting payment', fee: 3000, retrieval: true, recordRef: best.r.ref, recordId: best.r.id, ai: { level: 'warn', text: 'Index entry found (' + best.r.ref + ') but register not digitised. Manual retrieval and scan needed.' } }); location.href = 'pay.html?id=' + r.id; };
+      } else if (else_.length) {
+        out.innerHTML = '<div class="card stack" style="border:2px solid #378ADD"><span class="badge b-info" style="align-self:flex-start;font-size:14px">' + L('Not found in this council’s records, but similar records exist elsewhere','Absent des registres de cette commune, mais des actes proches existent ailleurs') + '</span>' +
+          '<p style="margin:0">' + L('I did not find this certificate in ','Je n’ai pas trouvé cet acte à ') + A.esc(A.council().name) + L('. In the shared index I found records with similar details at:','. Dans l’index partagé, des actes proches existent à :') + '</p>' +
+          else_.map((x,k) => '<div class="row between" style="border:1px solid var(--line);border-radius:12px;padding:12px 14px"><span class="stack" style="gap:2px"><strong>' + A.esc(cname(x.r.council)) + '</strong><span class="small muted">' + L('Match ','Correspondance ') + x.s + '% · ' + L('matches on: ','correspond sur : ') + x.why.join(', ') + (x.r.digitised ? L(' · digitised',' · numérisé') : '') + '</span></span><button class="btn sm" data-x="' + k + '">' + L('Request from this council','Demander à cette commune') + '</button></div>').join('') +
+          '<span class="small muted">' + L('To protect privacy, other people’s details are never shown. The other council confirms the match with you before issuing.','Pour protéger la vie privée, les détails ne sont jamais affichés. L’autre commune confirme avec vous avant de délivrer.') + '</span></div>';
+        document.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { const x = else_[+b.dataset.x]; const r = make(x.r, { status: 'Awaiting other council', fee: 3000, ai: { level: 'ok', text: 'Possible match ' + x.s + '% at ' + cname(x.r.council) + ' (' + x.r.ref + '). Inter-council request sent.' } });
+          A.state.exchanges.push(['XR-2026-00' + (20 + A.state.exchanges.length), 'To ' + cname(x.r.council), q.type + ' ' + (q.year || '') + ', ' + q.name, 'Waiting']); A.save();
+          out.insertAdjacentHTML('beforeend', '<div class="notice n-ok">' + L('Request ','Demande ') + '<strong>' + r.id + '</strong>' + L(' sent to ',' envoyée à ') + A.esc(cname(x.r.council)) + '. <a href="track.html?id=' + r.id + '">' + A.t('nav.track') + '</a></div>'); });
+      } else {
+        out.innerHTML = '<div class="card stack"><span class="badge b-grey" style="align-self:flex-start">' + L('No match found','Aucune correspondance') + '</span><p style="margin:0">' + L('No record matches these details in the digitised archives or the shared index. Some old registers are not indexed yet. You can ask for a manual search, or start a reconstitution if the original was destroyed.','Aucun acte ne correspond. Certains registres anciens ne sont pas encore indexés.') + '</p><div class="row"><a class="btn" href="apply.html?s=recon">' + L('Rebuild a destroyed record','Reconstituer un acte') + '</a><a class="btn ghost" href="assistant.html">' + L('Ask the assistant','Demander à l’assistant') + '</a></div></div>';
+      }
+    }, 900);
+  }
+  document.getElementById('f').addEventListener('submit', e => { e.preventDefault(); search(); });
+  texts(); document.addEventListener('langchange', texts);
+  const q = A.param('name'); if (q) { document.getElementById('name').value = q; search(); }
+})();
+</script>
+</body>
+</html>
